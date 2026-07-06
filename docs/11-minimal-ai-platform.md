@@ -228,7 +228,7 @@ The five that matter:
 | Post-disaster triage | PGR + boundary + assignment (prioritise and dispatch) |
 | Commissioner's brief | PGR + PT + W&S + HCM (aggregate read, no writes) |
 
-**For execution:** Temporal (Row 20 in AoP) is the right engine for these. It handles parallel execution, wait-for-all, partial failure compensation, and long-running workflows natively. OpenFn handles data integration well but is not designed for durable multi-step transactional flows the way Temporal is.
+**For execution:** n8n (already deployed at eGov) handles 4 of the 5 workflows — Commissioner's Brief, Revenue Recovery, Post-disaster Triage, and Annual Renewal are parallel-reads or single-path writes that n8n covers well. Start a Business requires parallel execution + saga compensation (if Fire NOC fails after Trade License succeeded, roll back Trade License) — Temporal is the right engine for that specific workflow. See [Mini Projects](12-mini-projects-revised.md) section 6 for the workflow-by-workflow breakdown.
 
 ---
 

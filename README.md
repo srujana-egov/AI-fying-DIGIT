@@ -47,9 +47,7 @@ What the 2.9 design got right that carries forward: progressive disclosure, "too
 | [01 — Vision](docs/01-vision.md) | The end state: what AI-fying DIGIT makes possible for city administrators and state officials |
 | [02 — Stakeholders](docs/02-stakeholders.md) | Who interacts with DIGIT at the platform level and what AI genuinely adds for each |
 | [03 — Existing Experiments](docs/03-existing-experiments.md) | DIGIT MCP, orchestrator, RAG V5, intern project — what was built and what was learned |
-| [04 — DIGIT 3.0 Analysis](docs/04-digit3-analysis.md) | What 3.0 provides: digit-cli, digit-client, digit-specs, workflow service — capability by capability |
 | [07 — Security & Governance](docs/07-security-governance.md) | Every concern raised, with specific mitigations |
-| [09 — Comparison: 2.9 vs 3.0](docs/09-comparison-digit29-vs-digit30.md) | Decision-by-decision: what 3.0 changes about the 2.9 approach, and what remains correct |
 | [10 — Existing AI Initiatives](docs/10-existing-ai-initiatives.md) | 23 AoP AI initiatives mapped to the architecture — what each carries that may need revisiting |
 | [11 — Minimal AI Platform](docs/11-minimal-ai-platform.md) | **The architecture**: with specs at the certificate standard, exactly what artifacts remain, what is eliminated, which AoP projects are relevant |
 | [12 — Mini Projects](docs/12-mini-projects-revised.md) | The 9 concrete projects: two spec tracks (P1a platform, P1b application), two diagram tracks (P2a, P2b), MCP, confirmation gate, audit log, RAG adaptation, Temporal |

@@ -97,33 +97,34 @@ An attacker cannot inject arbitrary content into a template-only alert system.
 ### 8. No Audit Trail
 **Concern:** Government operations require legally defensible audit records. "The AI did it" is not sufficient.
 
-**Mitigation:** A structured audit log for every AI-assisted operation.
+**Mitigation:** A structured audit log written after every confirmed AI-assisted operation. Schema defined at the platform level — all AI callers produce it consistently.
 
 **Schema:**
 ```json
 {
   "timestamp": "ISO 8601",
   "userId": "ramesh.kumar",
-  "tenantId": "pb.chandrapur",
-  "sessionId": "uuid",
-  "userQuery": "the raw input",
-  "inferredIntent": "workflow",
+  "tenantId": "pb.amritsar",
+  "sessionId": "uuid-v4",
+  "userQuery": "apply for trade license for my shop at 45 Gandhi Nagar",
+  "operationId": "applyForCertificate",
   "confidence": 0.94,
-  "allowedTools": ["workflow.create", "workflow.list"],
   "proposedAction": {
-    "tool": "workflow.create",
-    "params": {"processCode": "PROPERTY_TAX_ASSESSMENT", "states": [...]}
+    "endpoint": "POST /certificate-types/trade-license/certificates",
+    "params": { "applicantIds": [...], "certificateDetail": {...} }
   },
-  "userConfirmation": "yes",
-  "digitApiCall": "POST /workflow/v3/definition",
-  "digitApiResponse": {"success": true, "processCode": "PROPERTY_TAX_ASSESSMENT"},
-  "executionResult": "success"
+  "humanConfirmation": "yes",
+  "idempotencyKey": "uuid-v4",
+  "httpStatus": 201,
+  "result": { "applicationNumber": "CERT-APP-2026-001234" }
 }
 ```
 
-Append-only. Immutable. This is the RTI trail. "The AI classified the intent as workflow with 94% confidence, the user confirmed, the system executed POST /workflow/v3/definition with these parameters" — legally defensible.
+Append-only. PostgreSQL-backed with indexes on `(userId, timestamp)`, `(tenantId, timestamp)`, `(operationId, timestamp)`. Covers all RTI query patterns.
 
-1-2 weeks to build on top of the orchestrator.
+"The user queried applyForCertificate with 94% confidence, confirmed the proposed action, the system executed POST /certificate-types/trade-license/certificates, and received HTTP 201 with applicationNumber CERT-APP-2026-001234" — legally defensible and reproducible.
+
+See [Mini Projects](12-mini-projects-revised.md) section 5b for the full implementation.
 
 ---
 
@@ -198,15 +199,13 @@ Both are RTI-answerable. Both are reproducible. Both are documentable as public 
 
 ---
 
-### 14. State/Political Resistance to Intelligence Dashboards
-**Concern:** A system that surfaces comparative performance across cities creates political sensitivity. Department heads and state officials may block adoption.
+### 14. Intelligence vs Surveillance Framing
+**Concern:** AI flagging records in DIGIT (revenue gaps, non-filers, beneficiary duplicates) could be perceived as a surveillance or punitive system rather than an operational intelligence tool.
 
-**Reality:** This concern is real and cannot be resolved by technical design alone.
+**Reality:** The concern is real and is addressed by design.
 
 **Approach:**
-- **Cities own their data:** Each city's intelligence dashboard is visible to that city by default. State access requires explicit opt-in from the city.
-- **Improvement framing, not ranking framing:** The dashboard shows each city's performance over time — not a leaderboard vs other cities. "Chandrapur improved complaint resolution by 22% this quarter" is a headline a city commissioner wants. "Chandrapur ranks 8th worst in the state" is not.
-- **Lead with willing champions:** Find city commissioners who want this capability. Let them demonstrate results. Peer persuasion from a commissioner who used intelligence dashboards to justify additional budget is more effective than top-down mandate.
-- **State access is aggregated:** State-level dashboards show domain-level trends across all cities — not city-level scorecards. Which service types are most problematic statewide. Which interventions have shown results.
-
-Political resistance is not a reason to not build this. It is a reason to build it city-first, improvement-framed, and opt-in for state sharing.
+- **Flags are proposals, not decisions.** The AI writes a flag to a DIGIT record. A revenue officer reviews flagged records and decides whether to act. The AI does not send a notice, does not create a demand, does not contact a citizen. It surfaces a discrepancy. The human decides.
+- **No new data collection.** The AI cross-references data that already exists in DIGIT (license records, property tax declarations, water consumption) against external signals (GIS, satellite) that are public. No new surveillance infrastructure.
+- **Explainable flags.** Every flag written to a DIGIT record includes the reason: "Declared use: residential. GIS land-use classification: commercial. Source: [dataset]. Confidence: high." RTI-answerable.
+- **Revenue focus first.** The initial use cases (trade license GIS cross-reference, property tax area discrepancy) recover revenue that was legitimately owed but underpaid. This is not a new liability — it is a gap in existing collection.

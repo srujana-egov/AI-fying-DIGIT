@@ -130,7 +130,7 @@ The fraud detection work is genuinely domain-specific (HCM attendance patterns, 
 
 ---
 
-### Row 22 — AI Copilot for HCM Console (Ram)
+### Row 22 — AI Copilot for HCM Console
 **Status:** Completed.  
 **What it is:** Console AI Copilot — embedded in the HCM console.
 
@@ -159,7 +159,7 @@ The copilot pattern is right. It belongs in Layer 4. The question is whether the
 
 ---
 
-### Row 6 — Tech Design Automation (Kavi)
+### Row 6 — Tech Design Automation
 **Status:** In progress. Auto-generate API specs, sequence diagrams, code review.  
 **What it is:** Developer tooling. Requirement gap analysis, API spec generation, sequence diagram generation from requirements.
 
@@ -169,7 +169,7 @@ The copilot pattern is right. It belongs in Layer 4. The question is whether the
 
 ---
 
-### Row 7 — Log Anomaly Detection with AI Agents (Naresh/Nikhil)
+### Row 7 — Log Anomaly Detection with AI Agents
 **Status:** In progress (~60% done). Kubernetes cluster monitoring.  
 **What it is:** AI agent for Kubernetes log analysis and anomaly detection.
 
