@@ -60,7 +60,7 @@ The highest form of governance: the problem solved before the citizen knew it ex
 
 **Process Intelligence** — DIGIT's workflow service records every state transition with timestamps. SLA prediction, bottleneck detection, inspector delay flagging — the data is already there.
 
-These 5 patterns apply across all 18 DIGIT domain products. See [AI Patterns Across DIGIT Products](14-ai-patterns-across-digit-products.md) for the full product-by-product map.
+These 5 patterns apply across all 18 DIGIT domain products. See [AI Patterns Across DIGIT Products](07-ai-patterns-across-digit-products.md) for the full product-by-product map.
 
 ---
 

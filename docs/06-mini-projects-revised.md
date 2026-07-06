@@ -6,7 +6,7 @@ This replaces the earlier mini projects doc. Based on the conversation with the 
 
 ## 1. Raise All Specs to the Right Standard
 
-There are **two levels of specs**, and they need different things. See [13 — Two-Level Spec Architecture](13-two-level-spec-architecture.md) for the full picture.
+There are **two levels of specs**, and they need different things. See [05 — Two-Level Spec Architecture](05-two-level-spec-architecture.md) for the full picture.
 
 ---
 
@@ -612,7 +612,7 @@ async def execute_and_audit(pending: dict, ctx, http_client):
 
 ### How the 5 workflows call DIGIT
 
-Temporal activities call the **MCP server's tools** — not DIGIT APIs directly. This keeps every cross-module write on the same schema-checked, audit-logged path the interactive MCP path uses (see [11 — Minimal AI Platform](11-minimal-ai-platform.md)). Each activity carries the triggering user's Bearer token, or, for scheduled runs, the identity that approved the workflow definition up front.
+Temporal activities call the **MCP server's tools** — not DIGIT APIs directly. This keeps every cross-module write on the same schema-checked, audit-logged path the interactive MCP path uses (see [03 — Minimal AI Platform](03-minimal-ai-platform.md)). Each activity carries the triggering user's Bearer token, or, for scheduled runs, the identity that approved the workflow definition up front.
 
 ```
 User/scheduler triggers workflow (confirmed at entry)

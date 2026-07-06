@@ -1,6 +1,6 @@
 # Request Walkthroughs: Interactive vs Scheduled
 
-Two concrete traces through [the architecture](11-minimal-ai-platform.md), one per interaction mode, step by step through every box in the diagram.
+Two concrete traces through [the architecture](03-minimal-ai-platform.md), one per interaction mode, step by step through every box in the diagram.
 
 ---
 

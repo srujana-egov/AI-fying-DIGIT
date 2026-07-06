@@ -30,22 +30,24 @@ Specifically:
 - LLM tool selection from spec descriptions → **no custom intent classifier**
 - Certificate service (`digitnxt/license-certificate`) is the quality standard for application-level specs. Platform-level specs (`digitnxt/digit-specs/v3.0.0`) are a separate level needing different improvements
 
-What still needs building: specs at the right standard (two levels — see doc 13), interaction diagrams (two types), MCP server, confirmation gate, Temporal cross-module workflows (one engine for all 5 — saga compensation for Start a Business, durable execution for the rest).
+What still needs building: specs at the right standard (two levels — see doc 05), interaction diagrams (two types), MCP server, confirmation gate, Temporal cross-module workflows (one engine for all 5 — saga compensation for Start a Business, durable execution for the rest).
 
 ---
 
 ## Document Index
 
+Ordered for a top-to-bottom read: why, who, what, how deep, the build plan, proof it works, why it scales, and objections handled last.
+
 | Document | What it covers |
 |---|---|
 | [01 — Vision](docs/01-vision.md) | The end state: what AI-fying DIGIT makes possible for city administrators, state officials, and field workers |
 | [02 — Stakeholders](docs/02-stakeholders.md) | Who interacts with DIGIT at the platform level, what AI genuinely adds for each, and why developers and one-time city setup are out of scope |
-| [07 — Security & Governance](docs/07-security-governance.md) | Every concern raised, with specific mitigations |
-| [11 — Minimal AI Platform](docs/11-minimal-ai-platform.md) | **The architecture**: with specs at the certificate standard, exactly what artifacts remain and what is eliminated |
-| [12 — Mini Projects](docs/12-mini-projects-revised.md) | The 9 concrete projects: two spec tracks, two diagram tracks, MCP, confirmation gate, audit log, RAG adaptation, Temporal workflows |
-| [13 — Two-Level Spec Architecture](docs/13-two-level-spec-architecture.md) | Platform specs vs application specs: what each level needs, two types of interaction diagrams, how MCP spans both |
-| [14 — AI Patterns Across DIGIT Products](docs/14-ai-patterns-across-digit-products.md) | 5 generalizable patterns (flagging, GIS cross-reference, proactive alerting, deduplication, process intelligence) mapped across all 18 eGov domain products |
-| [15 — Request Walkthroughs](docs/15-request-walkthroughs.md) | Two step-by-step traces through the architecture: an interactive write (trade license application) and a scheduled cross-module job (revenue recovery on Temporal) |
+| [03 — Minimal AI Platform](docs/03-minimal-ai-platform.md) | **The architecture**: with specs at the certificate standard, exactly what artifacts remain and what is eliminated |
+| [04 — Request Walkthroughs](docs/04-request-walkthroughs.md) | Two step-by-step traces through the architecture: an interactive write (trade license application) and a scheduled cross-module job (revenue recovery on Temporal) |
+| [05 — Two-Level Spec Architecture](docs/05-two-level-spec-architecture.md) | Platform specs vs application specs: what each level needs, two types of interaction diagrams, how MCP spans both |
+| [06 — Mini Projects](docs/06-mini-projects-revised.md) | The 9 concrete projects: two spec tracks, two diagram tracks, MCP, confirmation gate, audit log, RAG adaptation, Temporal workflows |
+| [07 — AI Patterns Across DIGIT Products](docs/07-ai-patterns-across-digit-products.md) | 5 generalizable patterns (flagging, GIS cross-reference, proactive alerting, deduplication, process intelligence) mapped across all 18 eGov domain products |
+| [08 — Security & Governance](docs/08-security-governance.md) | Every concern raised, with specific mitigations |
 
 ---
 
@@ -53,7 +55,7 @@ What still needs building: specs at the right standard (two levels — see doc 1
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│  Any consumer: city admin · state official · field worker    │
+│  Any consumer: city admin · state official ·                 │
 │  AI agent · HCM console · PGR copilot                        │
 └─────────────────────┬────────────────────────────────────────┘
                       │

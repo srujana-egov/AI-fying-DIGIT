@@ -124,7 +124,7 @@ Append-only. PostgreSQL-backed with indexes on `(userId, timestamp)`, `(tenantId
 
 "The user queried applyForCertificate with 94% confidence, confirmed the proposed action, the system executed POST /certificate-types/trade-license/certificates, and received HTTP 201 with applicationNumber CERT-APP-2026-001234" — legally defensible and reproducible.
 
-See [Mini Projects](12-mini-projects-revised.md) section 5b for the full implementation.
+See [Mini Projects](06-mini-projects-revised.md) section 5b for the full implementation.
 
 ---
 
