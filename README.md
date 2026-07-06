@@ -48,7 +48,6 @@ What the 2.9 design got right that carries forward: progressive disclosure, "too
 | [02 — Stakeholders](docs/02-stakeholders.md) | Who interacts with DIGIT at the platform level and what AI genuinely adds for each |
 | [03 — Existing Experiments](docs/03-existing-experiments.md) | DIGIT MCP, orchestrator, RAG V5, intern project — what was built and what was learned |
 | [07 — Security & Governance](docs/07-security-governance.md) | Every concern raised, with specific mitigations |
-| [10 — Existing AI Initiatives](docs/10-existing-ai-initiatives.md) | 23 AoP AI initiatives mapped to the architecture — what each carries that may need revisiting |
 | [11 — Minimal AI Platform](docs/11-minimal-ai-platform.md) | **The architecture**: with specs at the certificate standard, exactly what artifacts remain, what is eliminated, which AoP projects are relevant |
 | [12 — Mini Projects](docs/12-mini-projects-revised.md) | The 9 concrete projects: two spec tracks (P1a platform, P1b application), two diagram tracks (P2a, P2b), MCP, confirmation gate, audit log, RAG adaptation, Temporal |
 | [13 — Two-Level Spec Architecture](docs/13-two-level-spec-architecture.md) | Platform specs vs application specs: what each level needs, two types of interaction diagrams, how MCP spans both |

@@ -282,6 +282,8 @@ No semantic layer. No tool registry. No custom intent classifier. No skills for 
 
 ## AoP Projects: Which Are Relevant
 
+The pattern across all relevant AoP initiatives: each team is solving a real domain problem, but is also independently building auth propagation, confirmation UX, audit trail, and entity resolution. These are platform concerns, not domain concerns. Building them once as shared infrastructure means each team only needs to solve the domain-specific part. Building them N times produces N different security postures and N maintenance burdens.
+
 ### Directly relevant — should be coordinated under this architecture
 
 | # | Initiative | Role in architecture | Direction |
