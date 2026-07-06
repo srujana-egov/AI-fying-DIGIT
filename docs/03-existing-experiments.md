@@ -27,23 +27,14 @@ DIGIT 2.9 Core
 Key design insight: *"Tool Registry is the main component. MCP is one caller. CLI is another. Tests are a third. No AI is required for the platform to work."*
 
 ### What Was Verified (March 2026)
-- **61 tools** across 14 domain groups: core, docs, mdms, boundary, pgr, employees, admin, monitoring, tracing, encryption, localization, masters, idgen, location
-- **Dual transport:** stdio for local development · HTTP Streamable for cloud deployment
-- **Progressive disclosure:** 8 core tools load on startup. Agents call `enable_tools` to unlock more as needed. This directly addresses context rot — starting with 61 tools degrades AI accuracy on tool selection; starting with 8 keeps the agent's working context lean without sacrificing capability.
-- **Auto-generated CLI:** 57 commands, zero per-tool code. Adding a tool to the registry automatically produces a CLI command. Three output modes: JSON (piped), table (TTY), plain (scripting). The CLI is a *derived artifact* of the registry, not a separate codebase.
-- **`@digit-mcp/data-provider` npm package:** Entity resolution + cross-service connection. `LOC_CITYA_1 → Ward 4 · North Zone · pg.citya`. `COMPLAINT_TYPE_1 → Garbage Not Collected`. Every consumer uses it without knowing DIGIT internals.
-- **Multi-tenant:** `pg.citya → pg` auto-derived
-- **Security:** Prompt injection defense + argument sanitization built in
-- **180 tests:** 127 integration + 53 agent safety tests
-- **Observability:** Grafana Tempo tracing, Kafka lag monitoring, DB row counts
-- **Unit economics:** $40–$120/month per city in AI inference cost → $10,000–$20,000/month in staff time recovered ≈ **100x ROI**
+
+- **Progressive disclosure:** 8 core tools load on startup; agents call `enable_tools` to unlock more. Solves context rot — 61 tools in context degrades AI tool-selection accuracy; starting with 8 keeps it lean without sacrificing capability.
+- **Auto-generated CLI:** 57 commands, zero per-tool code. The CLI is a derived artifact of the same registry that powers MCP — add one tool definition, get CLI command + MCP tool + test coverage automatically.
+- **Unit economics:** $40–$120/month per city in AI inference cost → $10,000–$20,000/month in staff time recovered ≈ **100x ROI**. Economic case is independent of platform version.
 
 ### What It Solves
 - Exposes DIGIT's capability surface to any AI agent via MCP
-- Resolves opaque internal codes to human-readable values (semantic layer)
-- Provides guided multi-step operations via skills
 - Addresses context rot through progressive disclosure (8 tools → unlock on demand)
-- Addresses the fact that DIGIT 2.9 APIs are not self-describing enough for direct AI consumption
 - Makes DIGIT "headless": any HTTP client (WhatsApp bot, ERP, voice assistant) becomes a DIGIT frontend
 
 ### The 6 Use Cases Built Around
