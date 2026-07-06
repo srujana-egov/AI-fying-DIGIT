@@ -15,9 +15,9 @@ User Interfaces (CLI, MCP callers, test runners)
         ↓
 Skills Registry (AI instructions for complex multi-step operations)
         ↓
-Tool Registry (61 tools, 14 groups — hand-authored)
+Tool Registry (61 tools, 14 groups — one definition powers all interfaces)
         ↓
-Semantic Layer (entity resolution: LOC_CITYA_1 → "Ward 4, Chandrapur")
+Semantic Layer (@digit-mcp/data-provider: LOC_CITYA_1 → "Ward 4, Chandrapur")
         ↓
 Product/Module Layer
         ↓
@@ -26,17 +26,41 @@ DIGIT 2.9 Core
 
 Key design insight from Chakshu: *"Tool Registry is the main component. MCP is one caller. CLI is another. Tests are a third. No AI is required for the platform to work."*
 
+### What Was Verified (March 2026)
+- **61 tools** across 14 domain groups: core, docs, mdms, boundary, pgr, employees, admin, monitoring, tracing, encryption, localization, masters, idgen, location
+- **Dual transport:** stdio for local development · HTTP Streamable for cloud deployment
+- **Progressive disclosure:** 8 core tools load on startup. Agents call `enable_tools` to unlock more as needed. This directly addresses context rot — starting with 61 tools degrades AI accuracy on tool selection; starting with 8 keeps the agent's working context lean without sacrificing capability.
+- **Auto-generated CLI:** 57 commands, zero per-tool code. Adding a tool to the registry automatically produces a CLI command. Three output modes: JSON (piped), table (TTY), plain (scripting). The CLI is a *derived artifact* of the registry, not a separate codebase.
+- **`@digit-mcp/data-provider` npm package:** Entity resolution + cross-service connection. `LOC_CITYA_1 → Ward 4 · North Zone · pg.citya`. `COMPLAINT_TYPE_1 → Garbage Not Collected`. Every consumer uses it without knowing DIGIT internals.
+- **Multi-tenant:** `pg.citya → pg` auto-derived
+- **Security:** Prompt injection defense + argument sanitization built in
+- **180 tests:** 127 integration + 53 agent safety tests
+- **Observability:** Grafana Tempo tracing, Kafka lag monitoring, DB row counts
+- **Unit economics:** $40–$120/month per city in AI inference cost → $10,000–$20,000/month in staff time recovered ≈ **100x ROI**
+
 ### What It Solves
 - Exposes DIGIT's capability surface to any AI agent via MCP
 - Resolves opaque internal codes to human-readable values (semantic layer)
 - Provides guided multi-step operations via skills
+- Addresses context rot through progressive disclosure (8 tools → unlock on demand)
 - Addresses the fact that DIGIT 2.9 APIs are not self-describing enough for direct AI consumption
+- Makes DIGIT "headless": any HTTP client (WhatsApp bot, ERP, voice assistant) becomes a DIGIT frontend
+
+### The 6 Use Cases Built Around
+1. **Start a business** — Trade License + Fire NOC + Water connection in parallel
+2. **Annual renewal at scale** — automated campaign across all licence holders
+3. **Revenue recovery** — Property Tax + Water & Sewerage cross-module collection intelligence
+4. **Post-disaster complaint triage** — prioritisation and assignment during flood events
+5. **Building permit diagnosis** — full permit status + blockers in one query
+6. **Commissioner's morning brief** — city-wide operational summary generated on demand
 
 ### What It Reveals
 1. **The tool registry exists because 2.9 specs aren't clean.** The 61 tools had to be hand-authored because the underlying API documentation didn't provide enough context for AI consumption.
-2. **Skills exist because the platform doesn't enforce process.** When the platform doesn't say "you must create an account before configuring workflow," a skill has to instruct the AI to do it in the right order.
-3. **The semantic layer is genuinely needed.** Internal codes (`LOC_CITYA_1`, `DEPT_1`, `pb.amritsar`) are not interpretable by AI or by humans reading AI responses without resolution.
-4. **This is a capability surface, not a safety layer.** The MCP stack defines what DIGIT can do. It does not restrict what AI is allowed to do based on deployment state.
+2. **Skills serve two different purposes.** Some skills compensate for the platform not enforcing process order. Others are developer productivity aids (`create_digit_ui`, `create_chart`, `debug`, `check_workflow_health`) — these are valid regardless of how clean the platform specs are.
+3. **Progressive disclosure is a design requirement, not a workaround.** Even with perfect specs, an agent given 100 tools loses accuracy. Starting minimal and unlocking on demand is the right pattern.
+4. **The semantic layer is genuinely needed.** Internal codes (`LOC_CITYA_1`, `DEPT_1`, `pb.amritsar`) are not interpretable by AI or by humans reading AI responses without resolution.
+5. **"Tools encode judgment, not just structure."** Even perfect API docs can't encode which of 26 services handles a given intent, what sequence achieves a multi-step workflow, or how to recover from partial failure. Tools encode that judgment. An LLM reconstructing it from docs does so probabilistically — inconsistently.
+6. **This is a capability surface, not a safety layer.** The MCP stack defines what DIGIT can do. It does not restrict what AI is allowed to do based on deployment state.
 
 ### Repo
 `digitnxt/digit-mcp` (internal)

@@ -21,7 +21,7 @@ A complete command-line interface covering:
 - Access control
 - Multi-context configuration with authentication
 
-**Implication for the AI layer:** Chakshu's auto-generated CLI is redundant on DIGIT 3.0. The CLI already exists and is well-designed. The AI layer builds on top of the existing CLI and APIs — it does not need to regenerate one.
+**Implication for the AI layer:** digit-cli closes the "no CLI for DIGIT" gap. The onboarding problem Chakshu identified is solved. However, Chakshu's auto-generated CLI is *architecturally different* from digit-cli and is not made redundant by it. Chakshu's CLI derives directly from the same Tool Registry that powers MCP — add one tool definition and you get CLI command + MCP tool + test coverage automatically, with zero per-tool code. digit-cli is independently maintained; it and the Tool Registry will diverge over time as tools are added. This is a design question the platform team should decide: unify on registry-derived CLI, or maintain two separate CLIs for different audiences.
 
 ---
 
@@ -98,17 +98,21 @@ No custom state-gating code needed for workflow-managed operations.
 
 | Chakshu's 2.9 Layer | Problem It Solved | DIGIT 3.0 Status |
 |---|---|---|
-| CLI | No command-line access to the platform | **Already exists.** digit-cli covers all setup operations. |
-| Tool Registry (61 tools, hand-authored) | 2.9 APIs not self-describing | **Derivable.** 16 clean OpenAPI 3.0.3 specs → auto-generate. |
-| Skills (multi-step guidance) | Platform didn't enforce process order | **Replaced.** Workflow service exposes valid transitions. Query the platform. |
-| Semantic Layer (code resolution) | Internal codes not human-readable | **Partial.** Localization service exists. Not yet wired for AI consumption. Gap remains. |
+| CLI (auto-generated from registry) | No command-line access to the platform | **Partially addressed.** digit-cli exists. But it's separately maintained — not derived from the same registry as MCP tools. |
+| Progressive disclosure (8 tools → unlock) | 61 tools in context degrades AI accuracy | **Not addressed by 3.0.** Still required regardless of how clean the specs are. |
+| Tool Registry (61 tools, hand-authored) | 2.9 APIs not self-describing | **Reduced effort.** 16 clean OpenAPI specs → generate a baseline. Judgment encoding on top still needed (~30% of original effort). |
+| Skills (multi-step guidance) | Platform didn't enforce process order; developer productivity | **Partially replaced.** Workflow service handles single-module process order. Cross-module orchestration skills (Revenue recovery, Commissioner's brief, Triage across modules) are still needed. Developer productivity skills (`create_digit_ui`, `create_chart`, `debug`) are still valid. |
+| Semantic Layer (code resolution) | Internal codes not human-readable | **Not addressed.** Localization service exists but not wired for AI consumption. Gap unchanged. |
 | MCP transport | No AI agent entry point | **Needs building.** Thin, generated from specs. Not hand-authored. |
 | Product/Module Layer | Context per DIGIT module | **In specs.** Each service spec provides sufficient context. |
 
-**The 6-layer stack collapses to ~3 layers on DIGIT 3.0:**
-1. Thin MCP server (auto-generated from digit-specs)
-2. Entity resolution service (wire the localization service)
+**The 6-layer stack simplifies on DIGIT 3.0 but does not collapse:**
+1. Thin MCP server (generated from digit-specs as baseline, judgment encoding on top, progressive disclosure groups required)
+2. Entity resolution service (wire the localization service, build the resolution cache)
 3. Confirmation + intent layer (orchestrator pattern)
+4. Cross-module skills (where workflow service can't help)
+
+The difference from 2.9 is magnitude, not kind. The work is lighter because the specs are better. The architectural decisions Chakshu made remain correct.
 
 ---
 
@@ -134,7 +138,11 @@ No custom state-gating code needed for workflow-managed operations.
 **Structured audit log schema** — define the schema for AI-assisted operation logs at the platform level so it's consistent across all callers. See [Security & Governance doc](07-security-governance.md) for detail.
 
 ### Does Not Need Building
-- A new CLI (digit-cli exists)
-- Hand-authored tool definitions (auto-generate from digit-specs)
-- Custom process enforcement skills (workflow service handles this)
 - A replacement for digit-client (correct for its purpose; AI needs MCP, not Java)
+- A completely new CLI if digit-cli is sufficient for the audience (though the registry-derived CLI architecture is worth adopting long-term)
+- Skills for single-module sequential workflow operations (the platform handles these)
+
+### Decision Points for the Platform Team
+- **CLI architecture:** Adopt registry-derived CLI (add tool once → CLI + MCP + tests), or maintain digit-cli as a separate codebase alongside the MCP tool registry?
+- **Progressive disclosure groups:** When generating the MCP server from digit-specs, define which tools load on startup (core 8) and which require `enable_tools`. This is a design decision, not an implementation detail.
+- **`@digit-mcp/data-provider` adaptation:** Port Chakshu's resolution package to 3.0 API responses rather than rebuilding entity resolution from scratch.

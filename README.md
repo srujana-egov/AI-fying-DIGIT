@@ -29,12 +29,14 @@ These four pieces, studied together with DIGIT 3.0's actual capabilities, produc
 > DIGIT 3.0 already provides most of what Chakshu's 2.9 experiment needed to build. The remaining AI layer is thin, derivable, and almost entirely about the confirmation and intent translation boundary — not about compensating for platform gaps.
 
 Specifically:
-- `digit-cli` already ships → Chakshu's auto-generated CLI is redundant on 3.0
-- 16 clean OpenAPI 3.0.3 specs → tool registry can be auto-generated, not hand-written
-- Workflow service exposes valid transitions via API → replaces hand-coded state gating in the orchestrator
+- 16 clean OpenAPI 3.0.3 specs → tool registry can be **seeded from generation, not hand-written** (reduces effort ~70%; encoding domain judgment on top still required)
+- `digit-cli` already ships → the "no CLI" gap is closed; Chakshu's registry-derived CLI is architecturally different (add one tool → CLI + MCP + tests auto-update) but not blocking
+- Workflow service exposes valid transitions via API → replaces hand-coded state gating for single-module operations; cross-module orchestration skills still needed
 - `digit-client` is a typed Java HTTP wrapper for microservices — not a semantic layer for AI consumption, and not intended to be
 
-What still needs building is focused: an MCP server (thin, generated from specs), entity resolution (wire the localization service), a confirmation middleware, and an intent classifier that covers all stakeholders.
+What still needs building: an MCP server (generated from specs + progressive disclosure groups), entity resolution (wire the localization service, port `@digit-mcp/data-provider`), a confirmation middleware, and an intent classifier that covers all stakeholders.
+
+What Chakshu's 2.9 design got right that carries forward to 3.0: progressive disclosure, semantic layer, "tools encode judgment not just structure," the one-registry-every-interface principle, dual transport, and unit economics. See [09 — Comparison](docs/09-comparison-digit29-vs-digit30.md) for detail.
 
 ---
 
@@ -50,6 +52,7 @@ What still needs building is focused: an MCP server (thin, generated from specs)
 | [06 — Mini Projects](docs/06-mini-projects.md) | 7 concrete projects to complete the architecture, 2 already running |
 | [07 — Security & Governance](docs/07-security-governance.md) | Every concern raised, with specific mitigations |
 | [08 — Roadmap](docs/08-roadmap.md) | Timeline, sequencing, dependencies |
+| [09 — Comparison: 2.9 vs 3.0](docs/09-comparison-digit29-vs-digit30.md) | Decision-by-decision: what 3.0 changes about Chakshu's approach, and what remains correct |
 
 ---
 
