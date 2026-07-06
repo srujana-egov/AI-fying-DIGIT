@@ -262,15 +262,96 @@ Full DIGIT documentation: API specs (the 16 digit-specs files), process guides, 
 
 ---
 
-## What the Four Experiments Tell Us Together
+---
+
+## PES Intern Projects: HCM Intelligence (In Progress)
+
+Two projects being built by PES interns, both HCM-specific, both proving the generalizable patterns at a different scale — country-level health campaigns in LMICs (Chad, Sierra Leone, Nigeria, Liberia).
+
+---
+
+### HCM Project 1: Population Denominator Intelligence
+
+**The problem:** Health campaigns like polio, SMC, and BedNet measure coverage as `beneficiaries reached / enrolled households`. But enumeration misses settlements never mapped, households not in any registry, communities invisible to field teams. The result: teams know how many children they found, not how many they should have reached. True coverage is unknowable. Missed children stay missed.
+
+**What is being built:**
+
+```
+WorldPop API (high-resolution raster population estimates, peer-reviewed, LMIC coverage)
+    +
+Google Open Buildings + Population Dynamics
+    (building footprints from satellite imagery + location signatures)
+    ↓
+Cross-reference against HCM enrolled household data
+    ↓
+Gap detection: areas where population estimates exceed enrolled households
+    ↓
+GIS map: visual prompt to field supervisor:
+    "Population data suggests people live here — no households registered"
+    ↓
+Corrected denominator fed back into HCM microplanning module
+```
+
+**Pattern this proves:** Pattern 2 (GIS Cross-Reference) at country scale. Satellite and population models as ground truth against HCM registry — the same abstraction as Property Tax area discrepancy or Trade License land-use mismatch, applied to health campaign population coverage.
+
+**What it reveals:**
+- Two independent GIS signals (WorldPop raster + Google building footprints) can be cross-referenced against each other AND against DIGIT registry data — increasing confidence in gap detection
+- The output writes back into the HCM microplanning module as a corrected denominator — not a dashboard, but a data correction that changes the campaign plan
+- Country-scale pilot (not city-scale) means the GIS cross-reference pattern works at the level of national health programmes, not just urban governance
+
+---
+
+### HCM Project 2: On-Device Beneficiary Deduplication
+
+**The problem:** In campaigns like polio and SMC, field workers register the same beneficiary multiple times — across cycles, across teams, or due to offline sync conflicts. Accurate cohort tracking (who received all campaign cycles) is impossible. True coverage across a campaign series is unknowable.
+
+**What is being built:**
+
+```
+Field worker opens HCM Flutter app
+    ↓
+Enters beneficiary: name + age + location
+    ↓
+On-device fuzzy search against existing records (before submission)
+    name similarity + age match + geographic proximity
+    ↓
+Likely match found → warning surfaced:
+    "Possible duplicate: Amina Kone, age 3, 200m from here. Same child?"
+    Worker confirms or proceeds
+    ↓
+If confirmed duplicate: merge or skip
+If not: submit as new
+
+Secondary: MOSIP deduplication engine integration for robust identity
+          matching at scale (biometric-backed)
+```
+
+**Reusable output:** Flutter library published as a standalone package — any DIGIT/HCM app can consume it. Deduplication does not need to be rebuilt per campaign or per country.
+
+**Dataset:** Synthetic (real campaign data has PII — cannot be shared for development).
+
+**Pattern this proves:** Pattern 4 (Deduplication), with two important distinctions from server-side deduplication:
+1. **On-device**: works offline (critical for field conditions in LMICs where connectivity is absent)
+2. **Before submission**: catches duplicates at the point of creation, not after they are already in the system — the lowest-cost point of intervention
+
+**What it reveals:**
+- The deduplication pattern should run at point of submission, not post-hoc — the earlier the intervention, the lower the data repair cost
+- Flutter library as a reusable component is the right delivery model — proves the pattern once, every campaign inherits it without rebuild
+- MOSIP integration shows the pattern connects to national identity infrastructure, not just local campaign records
+
+---
+
+## What the Six Experiments Tell Us Together
 
 | Question | Answer |
 |---|---|
 | Does DIGIT need a capability surface? | Yes. The DIGIT MCP experiment proved this. |
 | Does DIGIT need a safety layer? | Yes. The orchestrator proves this. |
 | Are they the same thing? | No. They compose. |
-| Does DIGIT need domain intelligence? | Yes. The intern project proves the flagging pattern. |
+| Does DIGIT need domain intelligence? | Yes. The PGR intern project proves the flagging pattern. |
 | Does DIGIT need a knowledge layer? | Yes. RAG V5 proves the architecture. |
-| Does AI flagging generalize beyond PGR? | Yes — HCM (age/status rules), Trade License (GIS vs declared use), Property Tax (area discrepancy), Water (consumption vs category). Same pattern, different domain rules and external signals. |
-| Should dashboards be built on top of flags? | No. PowerBI, DSS, and existing visualization tools are the right layer for this. eGov builds the intelligence and flags records via DIGIT APIs. The consumer visualizes. |
+| Does GIS cross-reference work at country scale? | Yes. HCM population denominator project proves it — WorldPop + Google Open Buildings vs HCM enrollment at country level in LMICs. |
+| Does deduplication need to be on-device? | Yes, for field conditions. HCM dedup project proves on-device fuzzy matching before submission is the right point of intervention. Offline-capable. Published as reusable Flutter library. |
+| Does AI flagging generalize beyond PGR? | Yes — same pattern across all 20 eGov products. See doc 14. |
+| Should dashboards be built on top of flags? | No. PowerBI, DSS, and existing tools do this. eGov flags records in DIGIT via API. Consumers visualize with their tools. |
 | Does any of this replace the platform? | No. Everything calls DIGIT APIs. The platform is the foundation. |

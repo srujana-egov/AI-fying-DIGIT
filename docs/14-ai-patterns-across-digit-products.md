@@ -48,7 +48,14 @@ Specifically uses GIS/satellite imagery as the external truth signal. Highest im
 | HCM Microplanning | Population register count | Satellite rooftop count | Invisible population for vaccination/benefits |
 | Water Schemes | Declared connections | Satellite: actual settlements | Coverage gap in rural water |
 
-**What builds this:** GIS intelligence microservice. Input: DIGIT registry records + satellite tile. Output: discrepancy flags written to DIGIT via API. Runs on a schedule (quarterly re-check). Not a dashboard — flags live in DIGIT, visualization is the consumer's concern.
+**What builds this:** GIS intelligence microservice. Input: DIGIT registry records + satellite/population data. Output: discrepancy flags written to DIGIT via API. Runs on a schedule. Not a dashboard — flags live in DIGIT, visualization is the consumer's concern.
+
+**Data sources in use:**
+- WorldPop — high-resolution raster population estimates, peer-reviewed, REST API, LMIC coverage
+- Google Open Buildings + Population Dynamics — building footprints from satellite imagery, location signatures per community
+- Standard GIS land-use classification layers (for trade license / property tax)
+
+**Already being built:** PES interns are building the HCM version (population denominator for campaigns in Chad, Sierra Leone, Nigeria, Liberia). Same pattern applies to Property Tax, Trade License, Works Management.
 
 ---
 
@@ -83,7 +90,13 @@ Any DIGIT product that registers individuals or entities at scale has a deduplic
 | Property Tax | Same property split into multiple records to stay below assessment threshold |
 | Trade License | Same business registered under multiple names at same address |
 
-**What builds this:** entity resolution at registration time. AI compares new record against existing records (name + location + identifiers). Flags probable duplicates before they are committed. This is a platform-level service, not a per-domain rebuild.
+**What builds this:** deduplication at point of submission — not post-hoc. AI compares incoming record against existing records (name + age + location, fuzzy matching). Flags probable duplicates before commitment. Worker confirms or proceeds.
+
+**Two deployment modes:**
+- **On-device** (critical for offline field conditions): fuzzy search runs locally in the app before sync. Flutter library approach — publish once, every DIGIT/HCM app consumes it without rebuild. Being built now by PES interns for HCM campaigns.
+- **Server-side** (for higher-confidence identity matching at scale): MOSIP integration for biometric-backed deduplication. Connects to national identity infrastructure.
+
+**Already being built:** PES interns are building the HCM version using synthetic campaign data. Flutter library will be reusable across all HCM campaigns without rebuild.
 
 ---
 
@@ -115,7 +128,7 @@ DIGIT workflow service records every state transition with timestamps. Enough hi
 | 5 | Birth & Death Certificate | ✓ date arithmetic checks | — | — | ✓ duplicate records | — |
 | 6 | Fire NOC | ✓ compliance vs building state | ✓ building modification detection | ✓ overdue reinspection | — | ✓ inspector delay flag |
 | 7 | Works Management | ✓ declared progress vs actual | ✓ satellite: incomplete works | ✓ monsoon/weather risk | — | ✓ cost overrun prediction |
-| 8 | HCM | ✓ age/status/pregnancy rules | ✓ rooftop vs population register | ✓ campaign coverage gap | ✓ cross-campaign dedup | — |
+| 8 | HCM | ✓ age/status/pregnancy rules | ✓ WorldPop + Google Open Buildings vs enrollment [**in progress — PES interns**] | ✓ campaign coverage gap | ✓ on-device fuzzy dedup before submission [**in progress — PES interns**] | — |
 | 9 | 10 Bed ICU | — | — | ✓ bed occupancy surge alert | ✓ patient duplicate | — |
 | 10 | DIVOC | — | — | — | ✓ credential dedup | — |
 | 11 | Social Benefits | ✓ eligibility inconsistency | — | ✓ disbursal anomaly | ✓ cross-SHG dedup | — |
