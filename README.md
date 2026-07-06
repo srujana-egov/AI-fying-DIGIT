@@ -20,20 +20,6 @@ These four pieces, studied together with DIGIT 3.0's actual capabilities and the
 
 ---
 
-## The Central Claim
-
-> With specs at the certificate service standard and interaction diagrams, the remaining AI layer is three things: an MCP server (auto-generated from specs), a confirmation gate (~100 lines), and Temporal for cross-module workflows. Everything else is eliminated or already in the platform.
-
-Specifically:
-- Specs at certificate standard → MCP tools **auto-generated**, not hand-authored. Human-readable codes → **semantic/entity resolution layer eliminated**
-- Workflow service exposes valid transitions → **no custom state-gating code**; query the platform instead
-- LLM tool selection from spec descriptions → **no custom intent classifier**
-- Certificate service (`digitnxt/license-certificate`) is the quality standard for application-level specs. Platform-level specs (`digitnxt/digit-specs/v3.0.0`) are a separate level needing different improvements
-
-What still needs building: specs at the right standard (two levels — see doc 05), interaction diagrams (two types), MCP server, confirmation gate, Temporal cross-module workflows (one engine for all 5 — saga compensation for Start a Business, durable execution for the rest).
-
----
-
 ## Document Index
 
 Ordered for a top-to-bottom read: why, who, what, how deep, the build plan, proof it works, why it scales, and objections handled last.
@@ -48,78 +34,3 @@ Ordered for a top-to-bottom read: why, who, what, how deep, the build plan, proo
 | [06 — Mini Projects](docs/06-mini-projects-revised.md) | The 9 concrete projects: two spec tracks, two diagram tracks, MCP, confirmation gate, audit log, RAG adaptation, Temporal workflows |
 | [07 — AI Patterns Across DIGIT Products](docs/07-ai-patterns-across-digit-products.md) | 5 generalizable patterns (flagging, GIS cross-reference, proactive alerting, deduplication, process intelligence) mapped across all 18 eGov domain products |
 | [08 — Security & Governance](docs/08-security-governance.md) | Every concern raised, with specific mitigations |
-
----
-
-## The Architecture (summary)
-
-```
-┌──────────────────────────────────────────────────────────────┐
-│  Any consumer: city admin · state official ·                 │
-│  AI agent · HCM console · PGR copilot                        │
-└─────────────────────┬────────────────────────────────────────┘
-                      │
-         ┌────────────▼────────────┐
-         │      Kong (digit3)       │
-         │  JWT validate + forward  │
-         │  X-Tenant-ID inject      │
-         │  RBAC (accesscontrol)    │
-         └──────┬──────┬──────┬────┘
-                │      │      │
-      ┌─────────┘      │      └───────────────┐
-      │                │                      │
-┌─────▼──────┐  ┌──────▼────────┐  ┌──────────▼──────┐
-│  RAG V5    │  │  MCP Server   │  │  Temporal       │
-│            │  │               │  │                 │
-│  "How do   │  │  auto-gen     │  │  5 cross-module │
-│  I..."     │  │  from specs   │  │  workflows      │
-│            │  │  confirm gate │  │  (calls MCP     │
-│            │  │  audit log    │  │  tools)         │
-└────────────┘  └──────┬────────┘  └──────┬──────────┘
-                       └────────┬──────────┘
-                                │ Bearer token forwarded
-                                ▼
-┌──────────────────────────────────────────────────────────────┐
-│  Application Services  (certificate standard)                │
-│  certificate · pgr · trade-license · bpa · property ·       │
-│  fire-noc · water · works · hcm · ...                        │
-└──────────────────────┬───────────────────────────────────────┘
-                       │
-                       ▼
-┌──────────────────────────────────────────────────────────────┐
-│  Platform Services  (digit-specs/v3.0.0)                     │
-│  workflow · individual · boundary · idgen · mdms ·           │
-│  notification · filestore · billing · ...                    │
-└──────────────────────────────────────────────────────────────┘
-
-                              ↕ scheduled agents (no human trigger)
-┌──────────────────────────────────────────────────────────────┐
-│  Intelligence Layer                                          │
-│  Flagging · GIS Cross-Reference · Proactive Alerting ·       │
-│  Deduplication · Process Intelligence                        │
-│  (reads application service records, writes flags via API)   │
-└──────────────────────────────────────────────────────────────┘
-```
-
-No semantic layer. No custom intent classifier. No entity resolution service. No hand-authored tool registry.
-
----
-
-## Status
-
-| Component | What it is | Status |
-|---|---|---|
-| EGOV RAG V5 | Documentation Q&A chatbot | Live (DIGIT Studio docs) |
-| digit-ai-orchestrator | Confirmation gate pattern (10 setup intents) | Built |
-| Smart Grievance Mapping | Intelligence microservice for PGR (intern project) | In progress — due July 30 |
-| HCM Population Denominator | GIS cross-reference: WorldPop + Google Open Buildings vs HCM enrollment (intern project) | In progress |
-| HCM Beneficiary Deduplication | On-device fuzzy match Flutter library (intern project) | In progress |
-| P1a — Platform spec improvements | Examples, idempotency on 16 platform specs | Proposed |
-| P1b — Application spec rewrites | ~18 domain product specs → certificate standard | Proposed |
-| P2a — Platform interaction diagrams | Internal behavior diagrams (~35-48) | Proposed |
-| P2b — Application interaction diagrams | Cross-service orchestration diagrams (~55-70) | Proposed |
-| P3 — MCP Server | Auto-generated from specs (both levels) | Proposed |
-| P4 — Confirmation gate | ~100 lines, Redis, for all write operations | Proposed |
-| P5 — Audit log | Platform-level schema, all AI callers | Proposed |
-| P6 — RAG V5 diagram ingestion | Ingest interaction diagrams into knowledge base | Proposed |
-| P7 — Temporal workflows | 5 cross-module workflows, one engine (saga compensation for Start a Business, durable execution for the rest) | Proposed |
