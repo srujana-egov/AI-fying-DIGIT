@@ -1,67 +1,75 @@
 # Vision: What AI-fying DIGIT Makes Possible
 
-## The Problem With the Current State
+## The Revenue Question Government Has Always Wanted Answered
 
-DIGIT cities collectively hold years of complaint data, property tax records, workforce attendance logs, water consumption patterns, and works execution histories. Almost none of it is being read analytically. The same drain floods every July. The same road breaks every monsoon. The same non-filers exist in every property tax roll. The system has the memory. It doesn't act on it.
+Every city running DIGIT has businesses that told the government they are a residence. Satellite imagery says they are a shop. The government has been collecting residential tax rates on commercial properties — for years. The gap is not accidental. It is systematic, large, and recoverable.
 
-AI-fying DIGIT makes this memory actionable — at the operational layer, not the configuration layer.
+> *"Which businesses declared residential use in their trade license application, but GIS data shows they are operating commercially?"*
 
----
+We can answer that question for any city running DIGIT, in minutes. Not a report — a list of flagged records in DIGIT with the evidence attached: declared use, GIS land-use classification, source, confidence. Revenue officials query the flagged records and act. The AI does the cross-referencing. The government collects the gap.
 
-## The End State
+The same logic, applied across domains:
 
-### For City Administrators
+| Domain | Declared in DIGIT | Ground truth signal | Gap |
+|---|---|---|---|
+| Trade License | Use: residential | GIS: commercial activity | Revenue under-collection |
+| Property Tax | Area: 500 sq ft | Satellite measurement: 800 sq ft | Assessment under-declaration |
+| Water Connection | Category: domestic | Consumption pattern: commercial | Mis-tariffing |
+| Construction Permit | Approved use: residential | Satellite: commercial structure | Compliance violation |
+| Health Campaign | Population register: 400 households | WorldPop + satellite rooftops: 520 | Invisible population, missed coverage |
 
-> "What needs my attention today?"
+Same AI, same platform, same pattern. Not a dashboard — flags written to DIGIT records via the API. Revenue officials and programme managers query flagged records using their existing tools. eGov surfaces the intelligence; the government decides and acts.
 
-Synthesised across all of DIGIT in seconds:
-
-> "Three things. Zone 3 drainage team is at 60% attendance today AND has 18 open high-urgency waterlogging complaints — collision. Property tax collection is 12% behind Q2 target — the non-filer list is ready for your signature. Complaint resolution time dropped 22% in Zone 1 after last week's preventive maintenance."
-
-No PDF. No calls. No waiting.
-
-### For State Officials
-
-> "Which 10 cities need intervention before monsoon — across all service domains?"
-
-Not complaints only. Property tax + water + works + HCM + PGR — composite, ranked, actionable. Across all DIGIT-running cities simultaneously.
-
-### For Revenue Intelligence
-
-> "Which businesses declared residential use in their license application but GIS data shows they're operating commercially?"
-
-A business pays less tax by declaring residential use. GIS and satellite imagery say otherwise. Cross-referencing DIGIT license records against GIS land-use data surfaces the gap. Estimated revenue recovery per city: significant.
-
-The same pattern works across domains:
-- **Trade License vs GIS**: declared use ≠ actual use → revenue gap
-- **Property Tax vs satellite imagery**: declared floor area ≠ measured area → under-declaration
-- **Water connection vs consumption**: declared usage category ≠ actual consumption pattern → mis-tariffing
-- **HCM microplanning vs rooftops**: population register ≠ satellite rooftop count → invisible population
-
-In every case: declared data in DIGIT records is cross-referenced against an external ground-truth signal (GIS, satellite, field surveys). The AI surfaces the discrepancy. The government collects the gap.
-
-This is not a dashboard. The intelligence layer flags records in DIGIT. Revenue officials query flagged records via DIGIT APIs. Visualization is their tool (PowerBI, DSS — not something eGov builds on top).
-
-### For the Platform Itself
-
-Any AI agent — Claude, GPT, a custom orchestrator — can call DIGIT via an MCP server auto-generated from the clean OpenAPI 3.0.3 specs. The agent queries the workflow service to know what transitions are valid right now. It does not reason about what's possible — it asks the platform.
+**This is already being built.** The health campaign version — cross-referencing WorldPop and Google Open Buildings against HCM enrollment data in Chad, Sierra Leone, Nigeria, and Liberia — is being developed by the platform team now. The same pattern applies to Property Tax and Trade License in any DIGIT city.
 
 ---
 
-## The Complaint That Never Gets Filed
+## Before the Flood, Not After
 
-The highest form of governance: the problem solved before the citizen knew it existed.
+Ward 12 has had waterlogging complaints every July for three consecutive years. The system detects this pattern in June. It alerts the drainage engineer. Preventive cleaning happens June 10th. July arrives. No complaints from Ward 12.
 
-Ward 12 has had waterlogging complaints every July for 3 consecutive years. The system detects this in June. It alerts the drainage engineer. Preventive cleaning happens June 10th. July comes. No complaints from Ward 12. The citizen gets a WhatsApp: "We've done preventive drain maintenance in your area."
+The citizen receives a WhatsApp via DIGIT notification service: *"We have completed preventive drain maintenance in your area ahead of the monsoon."*
 
-This is not speculative. Every component needed to build this is either already built (DIGIT PGR, DIGIT workflow, DIGIT notification) or is being built now (the intern project's recurrence detector and alert engine).
+The highest form of governance: the problem solved before the citizen knew it existed. Every component needed to build this is either already in DIGIT (PGR, workflow, notification) or being built now (the recurrence detector and alert engine in the current intern project).
+
+The same pattern generalises:
+- Property tax non-filers who appear on the same list three years running
+- Pump failure signatures that emerge 90 days before actual breakdown in water schemes
+- Health campaign wards that consistently under-report coverage cycle after cycle
+
+The signal is already in DIGIT. The action is already in DIGIT. The AI is the connection between them — running on a schedule, writing flags and triggering alerts, requiring no new platform infrastructure.
 
 ---
 
-## Scope Boundary
+## The Scale Argument
 
-This is about **DIGIT as a platform**, not about AI within specific citizen apps.
+DIGIT runs across hundreds of cities in India and internationally. Each city has property tax records, trade licenses, water connections, complaints, and workforce data. None of it is currently being cross-checked against ground truth.
 
-Citizens interact with apps built on DIGIT — PuraSeva, CCRS, HCM mobile. Whether those apps have AI features is the app partner's decision, like any other development decision. eGovernments Foundation's role is to make the platform AI-operable. What partners build on top of that is theirs.
+When the platform AI layer is built once:
 
-The same way eGov provides APIs, SDKs, and a CLI for developers — it should provide an AI-ready interface for AI agents.
+- Every city running DIGIT gets GIS revenue intelligence — not one pilot city
+- Every complaint service gets proactive recurrence alerting — not one ward
+- Every health campaign gets satellite-verified population denominators — not one country
+- Every trade license portfolio gets land-use cross-referencing — not one inspector's manual effort
+
+The same five patterns — flagging, GIS cross-reference, proactive alerting, deduplication, process intelligence — apply across all 18 DIGIT domain products. Build the platform layer once. Every domain gets AI capability without rebuilding the infrastructure.
+
+---
+
+## What This Is Not
+
+**Not a dashboard.** PowerBI and DSS exist. The intelligence layer flags records in DIGIT. Consumers visualise with their own tools. eGov's job is the intelligence, not the visualisation.
+
+**Not citizen-facing AI.** Citizens interact with apps built on DIGIT. Whether those apps have AI features is the app partner's decision — the same way whether they use React or Flutter is their decision. This proposal does not touch citizen-facing applications.
+
+**Not AI-assisted city configuration.** Configuration happens once per city. Tenant isolation means one city cannot read another city's setup. This is operational intelligence — thousands of transactions per day, recurring patterns, at-scale problems. One-time configuration is not in scope.
+
+---
+
+## What the Platform Becomes
+
+Any AI agent — Claude, GPT, a custom orchestrator — calls DIGIT via an MCP server auto-generated from clean OpenAPI 3.0.3 specs. The agent queries the workflow service to know what transitions are valid right now. It does not reason about what is possible — it asks the platform.
+
+A city commissioner asks in natural language. A flagging microservice runs on a schedule. A workflow spans Trade License, Fire NOC, and Water Connection in parallel. All of them call the same DIGIT APIs, through the same confirmation gate, with the same audit trail.
+
+DIGIT does not change. It becomes AI-operable.
