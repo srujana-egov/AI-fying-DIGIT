@@ -1,58 +1,96 @@
-# Vision: What AI-fying DIGIT Makes Possible
+# Vision: DIGIT 3.0 Becomes AI-Operable
 
-## The Revenue Question Government Has Always Wanted Answered
+## The Missing Piece
 
-Every city running DIGIT has businesses that told the government they are a residence. Satellite imagery says they are a shop. The government has been collecting residential tax rates on commercial properties — for years. The gap is not accidental. It is systematic, large, and recoverable.
+DIGIT 3.0 already exists. Sixteen platform services. Eighteen domain products. JWT authentication, tenant isolation, RBAC, workflow engine, notification service — all built and deployed across hundreds of cities.
 
-> *"Which businesses declared residential use in their trade license application, but GIS data shows they are operating commercially?"*
+The missing piece is not more platform. The missing piece is that no LLM can currently operate it.
 
-We can answer that question for any city running DIGIT, in minutes. Not a report — a list of flagged records in DIGIT with the evidence attached: declared use, GIS land-use classification, source, confidence. Revenue officials query the flagged records and act. The AI does the cross-referencing. The government collects the gap.
+Give Claude access to DIGIT today and it reads YAML files, reasons about what the API probably does, and writes HTTP calls that may or may not match the real schema. There is no structured execution surface. There is no auth propagation. There is no confirmation before a write. There is no audit trail.
 
-The same logic, applied across domains:
-
-| Domain | Declared in DIGIT | Ground truth signal | Gap |
-|---|---|---|---|
-| Trade License | Use: residential | GIS: commercial activity | Revenue under-collection |
-| Property Tax | Area: 500 sq ft | Satellite measurement: 800 sq ft | Assessment under-declaration |
-| Water Connection | Category: domestic | Consumption pattern: commercial | Mis-tariffing |
-| Construction Permit | Approved use: residential | Satellite: commercial structure | Compliance violation |
-| Health Campaign | Population register: 400 households | WorldPop + satellite rooftops: 520 | Invisible population, missed coverage |
-
-Same AI, same platform, same pattern. Not a dashboard — flags written to DIGIT records via the API. Revenue officials and programme managers query flagged records using their existing tools. eGov surfaces the intelligence; the government decides and acts.
-
-**This is already being built.** The health campaign version — cross-referencing WorldPop and Google Open Buildings against HCM enrollment data in Chad, Sierra Leone, Nigeria, and Liberia — is being developed by the platform team now. The same pattern applies to Property Tax and Trade License in any DIGIT city.
+That is the gap this proposal closes.
 
 ---
 
-## Before the Flood, Not After
+## What AI-Operable DIGIT Looks Like
 
-Ward 12 has had waterlogging complaints every July for three consecutive years. The system detects this pattern in June. It alerts the drainage engineer. Preventive cleaning happens June 10th. July arrives. No complaints from Ward 12.
+Certificate-standard OpenAPI specs → `openapi-generator-cli` → typed HTTP clients → MCP tool definitions. Auto-generated. Kong (digit3) validates the JWT and forwards the Bearer token. The MCP server adds a confirmation gate for all writes and an audit log for every action.
 
-The citizen receives a WhatsApp via DIGIT notification service: *"We have completed preventive drain maintenance in your area ahead of the monsoon."*
+The result: any LLM — Claude, GPT, a custom orchestrator — can call any DIGIT API, on behalf of any authenticated stakeholder, with human confirmation before writes and a complete audit trail after.
 
-The highest form of governance: the problem solved before the citizen knew it existed. Every component needed to build this is either already in DIGIT (PGR, workflow, notification) or being built now (the recurrence detector and alert engine in the current intern project).
+DIGIT does not change. It becomes AI-operable.
 
-The same pattern generalises:
-- Property tax non-filers who appear on the same list three years running
-- Pump failure signatures that emerge 90 days before actual breakdown in water schemes
-- Health campaign wards that consistently under-report coverage cycle after cycle
+---
 
-The signal is already in DIGIT. The action is already in DIGIT. The AI is the connection between them — running on a schedule, writing flags and triggering alerts, requiring no new platform infrastructure.
+## What This Enables, Per Stakeholder
+
+**Implementation team**
+
+> "Set up trade license for pb.amritsar."
+
+Claude calls the MDMS configuration API, the workflow definition API, the IDGen format configuration API — in sequence. Before each write, it shows exactly what it is about to do and asks for confirmation. The setup that takes a trained engineer half a day to script becomes a supervised conversation. RAG V5 answers "what does this field mean?" instantly without opening a spec file.
+
+**City administrator**
+
+> "Which grievance complaints have been open more than 30 days in Ward 5?"
+
+Claude calls the PGR search API with the right filters. It gets real data from the running DIGIT instance. It returns a plain-English summary. No dashboard needed. No report requested. A direct answer from a live system.
+
+> "How many trade licenses expire in the next 60 days?"
+
+Same pattern. One tool call. Real data. Immediate answer.
+
+**State official**
+
+> "Compare grievance resolution rates across cities this quarter."
+
+Claude calls PGR aggregate APIs across tenants. Returns a ranked list with the outliers flagged. No waiting for city-level reports to be manually compiled.
+
+**Field worker (HCM)**
+
+A field worker registers a beneficiary in the HCM Flutter app. Before submission, on-device fuzzy matching checks: name + age + GPS proximity. "Possible duplicate: Amina Kone, age 3, 200m from here. Same child?" Worker confirms or proceeds. The duplicate is caught at the point of creation, not discovered weeks later in a data quality audit.
+
+---
+
+## The Second Capability: 5 Intelligence Patterns as Scheduled Agents
+
+Once DIGIT is AI-operable, a second class of capability becomes possible: scheduled agents that read DIGIT records, apply an intelligence signal, and write findings back — without any human trigger. These run on top of the same MCP server, the same auth propagation, the same audit trail.
+
+**Pattern 1 — Flagging: declared vs expected**
+AI compares submitted data in DIGIT records against expected values — domain rules, models, or external signals. Flags inconsistencies. Writes flags back via DIGIT API. One microservice per domain. No dashboard — consumers query flagged records using their existing tools.
+
+**Pattern 2 — GIS Cross-Reference: satellite vs registry**
+Declared use vs GIS land-use. Declared area vs satellite measurement. Population register vs WorldPop + Google Open Buildings.
+
+> Every city running DIGIT has businesses that told the government they are a residence. Satellite imagery says they are a shop. The government has been collecting residential tax rates on commercial properties — for years. The gap is recoverable.
+
+The HCM version — cross-referencing WorldPop and Google Open Buildings against campaign enrollment data in Chad, Sierra Leone, Nigeria, and Liberia — is being built by the platform team now. The same pattern applies to Property Tax and Trade License in any DIGIT city.
+
+**Pattern 3 — Proactive Alerting: act before the event**
+Ward 12 has had waterlogging complaints every July for three consecutive years. The system detects this in June. The drainage engineer gets a WhatsApp. Preventive work happens June 10th. No complaints from Ward 12.
+
+The highest form of governance: the problem solved before the citizen knew it existed. Every component is already in DIGIT — PGR, workflow, notification. The recurrence detector is the only new piece.
+
+**Pattern 4 — Deduplication: point of submission**
+On-device fuzzy match (Flutter library, offline-capable) for field conditions. Server-side MOSIP biometric matching for national identity infrastructure. Both modes catch duplicates before they enter the system — not after.
+
+**Pattern 5 — Process Intelligence: workflow history → signal**
+DIGIT's workflow service records every state transition with timestamps. That history exists for every application, in every city. SLA prediction, bottleneck detection, inspector delay flagging — no new data collection needed. The data is already there.
+
+These 5 patterns apply across all 18 DIGIT domain products. See [AI Patterns Across DIGIT Products](14-ai-patterns-across-digit-products.md) for the full product-by-product map.
 
 ---
 
 ## The Scale Argument
-
-DIGIT runs across hundreds of cities in India and internationally. Each city has property tax records, trade licenses, water connections, complaints, and workforce data. None of it is currently being cross-checked against ground truth.
 
 When the platform AI layer is built once:
 
 - Every city running DIGIT gets GIS revenue intelligence — not one pilot city
 - Every complaint service gets proactive recurrence alerting — not one ward
 - Every health campaign gets satellite-verified population denominators — not one country
-- Every trade license portfolio gets land-use cross-referencing — not one inspector's manual effort
+- Every implementation team gets an AI-assisted setup process — not one trained engineer
 
-The same five patterns — flagging, GIS cross-reference, proactive alerting, deduplication, process intelligence — apply across all 18 DIGIT domain products. Build the platform layer once. Every domain gets AI capability without rebuilding the infrastructure.
+The platform is the leverage point. AI-operable DIGIT means every domain, every city, every stakeholder benefits from the same infrastructure — without each team rebuilding auth, confirmation, audit, and entity resolution from scratch.
 
 ---
 
