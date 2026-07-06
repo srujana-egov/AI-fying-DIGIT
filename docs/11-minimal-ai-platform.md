@@ -264,8 +264,8 @@ Two distinct interaction modes. The diagram shows both.
   │  API calls   │  │  (app +        │    │  services internally)               │
   └──────────────┘  │  platform)     │    └──────────────────────┬──────────────┘
                     └───────┬────────┘                           │
-                            │ Bearer token forwarded             │
-                            │ Audit log written                  │
+                            │ Bearer token forwarded             │ Bearer token forwarded
+                            │ Audit log written                  │ (no audit log)
                             └────────────────────┬───────────────┘
                                                  ▼
 ┌─────────────────────────────────────────────────────────────────┐
@@ -284,13 +284,18 @@ Two distinct interaction modes. The diagram shows both.
 │                                                                 │
 │  workflow · individual · boundary · idgen · mdms ·              │
 │  notification · filestore · billing · registry · ...           │
-└─────────────────────────────────────────────────────────────────┘
-
-            ↑ reads application service records (scheduled)
-            │ writes flags back via application service APIs
-            │ alert engine sends via DIGIT notification (platform)
-            │
-┌───────────┴──────────────────────────────────────────────────────
+└──────────────────────────┬──────────────────────────────────┬───┘
+                           │ each app service calls platform  │
+                           │ services                          │ reads APPLICATION service
+                           ▼                                   │ records (scheduled)
+┌──────────────────────────────────────────────────────────┐  │ writes flags back via
+│  Platform Services  (digit-specs/v3.0.0)                 │  │ application service APIs
+│                                                          │  │ alert engine calls
+│  workflow · individual · boundary · idgen · mdms ·       │  │ notification (platform)
+│  notification · filestore · billing · registry · ...    │  │
+└──────────────────────────────────────────────────────────┘  │
+                                                              ▼
+┌─────────────────────────────────────────────────────────────────
 │         INTELLIGENCE LAYER  (scheduled · domain-specific · shared pattern)
 │
 │  Flagging microservices (one per domain):
