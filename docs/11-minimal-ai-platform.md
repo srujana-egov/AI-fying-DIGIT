@@ -121,7 +121,7 @@ Kong is the existing API gateway in `digitnxt/digit3`. The core requirements are
 | Bootstrap whitelist (`/accounts`, `/keycloak` bypass JWT) | ✓ Configured in `setup.py` |
 
 **What still needs doing:**
-- Register MCP server, RAG V5, and n8n as protected services in Kong's `setup.py` (same pattern as workflow, boundary, idgen)
+- Register MCP server, RAG V5, and Temporal as protected services in Kong's `setup.py` (same pattern as workflow, boundary, idgen)
 - Add per-tenant, per-agent rate limiting — AI agents call at machine speed; existing limits are designed for human-paced interaction
 - Confirm OTP endpoint whitelist behaviour (currently gets JWT + RBAC applied — may need to be whitelisted for unauthenticated OTP flows)
 
@@ -219,7 +219,7 @@ This is the only place where "AI proposes, human confirms, AI executes" happens.
 
 The interaction diagrams handle single-service understanding. For operations that span multiple services, a workflow definition is still needed. These are authored once and don't change often.
 
-The five that matter:
+The five that matter — not an exhaustive list, but five representative shapes of cross-module orchestration (saga rollback, durable bulk job, read-then-act, prioritize-and-dispatch, pure aggregate read). Covering these five is enough to prove the pattern handles the categories of cross-module work DIGIT needs:
 
 | Workflow | Services spanned |
 |---|---|
@@ -229,9 +229,9 @@ The five that matter:
 | Post-disaster triage | PGR + boundary + assignment (prioritise and dispatch) |
 | Commissioner's brief | PGR + PT + W&S + HCM (aggregate read, no writes) |
 
-**For execution:** n8n (already deployed at eGov) handles 4 of the 5 workflows — Commissioner's Brief, Revenue Recovery, Post-disaster Triage, and Annual Renewal are parallel-reads or single-path writes that n8n covers well. Start a Business requires parallel execution + saga compensation (if Fire NOC fails after Trade License succeeded, roll back Trade License) — Temporal is the right engine for that specific workflow. See [Mini Projects](12-mini-projects-revised.md) section 6 for the workflow-by-workflow breakdown.
+**For execution:** Temporal runs all 5 — not just Start a Business. Only Start a Business needs Temporal's saga compensation (if Fire NOC fails after Trade License succeeded, roll back Trade License), and n8n (already deployed at eGov) is technically capable of the other 4. But the deciding factor is rollback: once Temporal is required for the one workflow that needs a compensation guarantee, running a second engine for the rest buys no capability and adds a second failure model to operate and debug. Temporal's durable execution also resumes correctly if a scheduled job crashes mid-batch — relevant to Annual Renewal Campaign's thousands of sequential writes, which n8n cannot resume mid-run. See [Mini Projects](12-mini-projects-revised.md) section 6 for the full comparison.
 
-n8n and Temporal are sequencers, not a second write path. Every step that writes to a DIGIT service — whether triggered by a live user or a cron schedule — calls the same MCP tool the interactive path uses, so it is schema-checked and audit-logged the same way. What changes for scheduled workflows is *when* human authorization happens: instead of a synchronous "confirm this one action" prompt, a person approves the workflow definition or campaign up front (e.g. "run annual renewal for all active holders in Amritsar"), and each step's write still lands in the same audit log. The confirmation gate is satisfied once, earlier, not skipped.
+Temporal is a sequencer, not a second write path. Every step that writes to a DIGIT service — whether triggered by a live user or a cron schedule — calls the same MCP tool the interactive path uses, so it is schema-checked and audit-logged the same way. What changes for scheduled workflows is *when* human authorization happens: instead of a synchronous "confirm this one action" prompt, a person approves the workflow definition or campaign up front (e.g. "run annual renewal for all active holders in Amritsar"), and each step's write still lands in the same audit log. The confirmation gate is satisfied once, earlier, not skipped.
 
 ---
 
@@ -242,7 +242,7 @@ Two distinct interaction modes. The diagram shows both.
 ```
                         INTERACTIVE  (user-initiated)                 SCHEDULED  (cron-triggered)
 ┌──────────────────────────────────────────────────────────────────┐ ┌─────────────────────────────┐
-│  Any consumer: city admin · state official · AI agent ·          │ │  n8n / Temporal              │
+│  Any consumer: city admin · state official · AI agent ·          │ │  Temporal                     │
 │  HCM console · PGR copilot · WhatsApp bot                        │ │  cross-module orchestration  │
 └──────────────────────────┬───────────────────────────────────────┘ │  5 workflows · saga           │
                            │                                          │  sequences steps; each write  │
@@ -350,14 +350,14 @@ Several teams across eGov are independently building auth propagation, confirmat
 1. Raise all ~18 domain product specs to the certificate service standard — human-readable codes, rich descriptions, examples, tenantId from Bearer, idempotency keys (7 rewrite from Swagger 2.0, ~11 create new)
 2. Add interaction diagrams (websequencediagrams/Mermaid format) for each major operation — prerequisites, data on arrows, failure alt block
 3. Add response enrichment — return code + label in the same response field
-4. Register MCP server, RAG V5, and n8n with Kong (digit3) — add to `setup.py` as protected services; add AI-specific rate limiting
+4. Register MCP server, RAG V5, and Temporal with Kong (digit3) — add to `setup.py` as protected services; add AI-specific rate limiting
 5. Define audit log schema at the platform level
 
 **From the AI execution layer (3 items — built once, shared by all):**
 
 1. MCP server — auto-generate from specs, add progressive disclosure groups, deploy
 2. Confirmation gate + audit log writer — Redis pending action store, confirm endpoint, PostgreSQL audit log
-3. Cross-module n8n workflows — 5 workflows, n8n-first (already deployed); Temporal specifically for Start a Business saga compensation
+3. Cross-module Temporal workflows — one engine for all 5, chosen because Start a Business needs saga compensation and running a second engine for the rest adds no value
 
 **From the intelligence layer (one per domain, shared pattern):**
 

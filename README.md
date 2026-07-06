@@ -22,7 +22,7 @@ These four pieces, studied together with DIGIT 3.0's actual capabilities and the
 
 ## The Central Claim
 
-> With specs at the certificate service standard and interaction diagrams, the remaining AI layer is three things: an MCP server (auto-generated from specs), a confirmation gate (~100 lines), and n8n for cross-module workflows. Everything else is eliminated or already in the platform.
+> With specs at the certificate service standard and interaction diagrams, the remaining AI layer is three things: an MCP server (auto-generated from specs), a confirmation gate (~100 lines), and Temporal for cross-module workflows. Everything else is eliminated or already in the platform.
 
 Specifically:
 - Specs at certificate standard → MCP tools **auto-generated**, not hand-authored. Human-readable codes → **semantic/entity resolution layer eliminated**
@@ -30,7 +30,7 @@ Specifically:
 - LLM tool selection from spec descriptions → **no custom intent classifier**
 - Certificate service (`digitnxt/license-certificate`) is the quality standard for application-level specs. Platform-level specs (`digitnxt/digit-specs/v3.0.0`) are a separate level needing different improvements
 
-What still needs building: specs at the right standard (two levels — see doc 13), interaction diagrams (two types), MCP server, confirmation gate, n8n cross-module workflows (Temporal only for Start a Business saga compensation).
+What still needs building: specs at the right standard (two levels — see doc 13), interaction diagrams (two types), MCP server, confirmation gate, Temporal cross-module workflows (one engine for all 5 — saga compensation for Start a Business, durable execution for the rest).
 
 ---
 
@@ -43,7 +43,7 @@ What still needs building: specs at the right standard (two levels — see doc 1
 | [03 — Existing Experiments](docs/03-existing-experiments.md) | DIGIT MCP, orchestrator, RAG V5, intern projects — what was built and what was learned |
 | [07 — Security & Governance](docs/07-security-governance.md) | Every concern raised, with specific mitigations |
 | [11 — Minimal AI Platform](docs/11-minimal-ai-platform.md) | **The architecture**: with specs at the certificate standard, exactly what artifacts remain and what is eliminated |
-| [12 — Mini Projects](docs/12-mini-projects-revised.md) | The 9 concrete projects: two spec tracks, two diagram tracks, MCP, confirmation gate, audit log, RAG adaptation, n8n workflows |
+| [12 — Mini Projects](docs/12-mini-projects-revised.md) | The 9 concrete projects: two spec tracks, two diagram tracks, MCP, confirmation gate, audit log, RAG adaptation, Temporal workflows |
 | [13 — Two-Level Spec Architecture](docs/13-two-level-spec-architecture.md) | Platform specs vs application specs: what each level needs, two types of interaction diagrams, how MCP spans both |
 | [14 — AI Patterns Across DIGIT Products](docs/14-ai-patterns-across-digit-products.md) | 5 generalizable patterns (flagging, GIS cross-reference, proactive alerting, deduplication, process intelligence) mapped across all 18 eGov domain products |
 
@@ -67,12 +67,12 @@ What still needs building: specs at the right standard (two levels — see doc 1
       ┌─────────┘      │      └───────────────┐
       │                │                      │
 ┌─────▼──────┐  ┌──────▼────────┐  ┌──────────▼──────┐
-│  RAG V5    │  │  MCP Server   │  │  n8n            │
+│  RAG V5    │  │  MCP Server   │  │  Temporal       │
 │            │  │               │  │                 │
 │  "How do   │  │  auto-gen     │  │  5 cross-module │
 │  I..."     │  │  from specs   │  │  workflows      │
-│            │  │  confirm gate │  │                 │
-│            │  │  audit log    │  │                 │
+│            │  │  confirm gate │  │  (calls MCP     │
+│            │  │  audit log    │  │  tools)         │
 └────────────┘  └──────┬────────┘  └──────┬──────────┘
                        └────────┬──────────┘
                                 │ Bearer token forwarded
@@ -120,4 +120,4 @@ No semantic layer. No custom intent classifier. No entity resolution service. No
 | P4 — Confirmation gate | ~100 lines, Redis, for all write operations | Proposed |
 | P5 — Audit log | Platform-level schema, all AI callers | Proposed |
 | P6 — RAG V5 diagram ingestion | Ingest interaction diagrams into knowledge base | Proposed |
-| P7 — n8n workflows | 5 cross-module workflows (Temporal for Start a Business saga) | Proposed |
+| P7 — Temporal workflows | 5 cross-module workflows, one engine (saga compensation for Start a Business, durable execution for the rest) | Proposed |

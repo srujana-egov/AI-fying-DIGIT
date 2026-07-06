@@ -608,19 +608,20 @@ async def execute_and_audit(pending: dict, ctx, http_client):
 
 ---
 
-## 6. Temporal — Use Case and Open Questions
+## 6. Temporal — Use Case and Why It Replaces n8n
 
-### How n8n calls DIGIT
+### How the 5 workflows call DIGIT
 
-n8n HTTP Request nodes call DIGIT APIs **directly** — not via the MCP server. Each node carries the user's Bearer token (passed from the workflow trigger) in the Authorization header. Kong validates the JWT before the request reaches any DIGIT service, the same way it does for MCP. The confirmation gate is not involved mid-workflow — the user confirms the whole workflow at entry, not each individual API call.
+Temporal activities call the **MCP server's tools** — not DIGIT APIs directly. This keeps every cross-module write on the same schema-checked, audit-logged path the interactive MCP path uses (see [11 — Minimal AI Platform](11-minimal-ai-platform.md)). Each activity carries the triggering user's Bearer token, or, for scheduled runs, the identity that approved the workflow definition up front.
 
 ```
-User triggers workflow (confirms at entry)
-  → n8n HTTP Request node
-    → Authorization: Bearer {user_jwt}   ← Kong validates this
-    → POST /certificate-types/trade-license/certificates
-    → DIGIT API responds
-  → n8n next node (Fire NOC, Water, etc. in parallel)
+User/scheduler triggers workflow (confirmed at entry)
+  → Temporal activity: apply_for_certificate("trade-license", ...)
+    → calls MCP tool `certificate_apply`
+      → Kong validates JWT → Trade License service
+      → audit log written
+  → Temporal activity: apply_for_certificate("fire-noc", ...)      (parallel)
+  → Temporal activity: apply_for_water_connection(...)              (parallel)
 ```
 
 ### What Temporal is
@@ -632,7 +633,21 @@ Open-source workflow orchestration engine. Handles:
 - Compensation (if step 3 fails, automatically run rollback for steps 1 and 2)
 - Long-running workflows (a permit approval process that takes days)
 
-### The 5 cross-module workflows that need Temporal
+### Why these 5 workflows
+
+They are not the only cross-module need DIGIT will ever have — they are five representative *shapes* of orchestration, chosen because between them they cover the failure profiles a cross-module workflow can have:
+
+| Workflow | Shape |
+|---|---|
+| Start a business | Parallel writes with dependent rollback — a saga |
+| Annual renewal campaign | The same simple write, repeated at scale — a durable bulk job |
+| Revenue recovery | Read, join across services, then act |
+| Post-disaster triage | Read, prioritize, then dispatch |
+| Commissioner's brief | Pure aggregate read, no writes |
+
+Covering these five shapes is enough to prove the orchestration layer handles the categories of cross-module work DIGIT needs. A new cross-module requirement is very likely a variation on one of these five, not a sixth category.
+
+### The 5 cross-module workflows — all on Temporal
 
 | Workflow | Services | Why Temporal |
 |---|---|---|
@@ -658,6 +673,8 @@ class StartBusinessWorkflow:
         )
         
         # Run all three in parallel — wait for all to complete
+        # Each activity below calls the matching MCP tool (e.g. certificate_apply),
+        # not the DIGIT API directly — same schema check, same audit log as the interactive path
         results = await asyncio.gather(
             workflow.execute_activity(apply_for_certificate, 
                 args=["trade-license", params.tradeLicenseData]),
@@ -677,9 +694,9 @@ class StartBusinessWorkflow:
 
 If the Fire NOC activity fails halfway, Temporal automatically retries it. If it permanently fails, it runs the compensation (cancel Trade License + Water Connection that already succeeded).
 
-### Can n8n or OpenFn replace Temporal for these workflows?
+### Why not n8n or OpenFn for these workflows?
 
-**n8n: yes for 4 of 5, no for Start a Business.**
+**n8n: capable of 4 of 5, but not chosen.**
 
 n8n is already deployed at eGov. It has an HTTP Request node, can call DIGIT APIs with Bearer tokens, has a visual workflow editor, and can run steps in parallel using Split In Batches / Merge nodes.
 
@@ -689,26 +706,23 @@ n8n is already deployed at eGov. It has an HTTP Request node, can call DIGIT API
 | Revenue Recovery | Yes | Query PT + W&S → flag → write. Sequential, no compensation needed. |
 | Post-disaster Triage | Yes | Webhook trigger → parallel ward assignment. n8n handles this. |
 | Annual Renewal Campaign | Mostly | Loop through certificate holders, call API per holder. Weakness: if n8n crashes mid-batch, no resume. For thousands of records this matters. |
-| Start a Business | Weak | Parallel TL + Fire NOC + Water is doable. Compensation (if Fire NOC fails after TL succeeded → cancel TL) is not built-in. Needs custom error-handling code. |
+| Start a Business | No | Parallel TL + Fire NOC + Water is doable. Compensation (if Fire NOC fails after TL succeeded → cancel TL) is not built-in. Needs custom error-handling code, and even then is not a guarantee. |
+
+The deciding factor is rollback. Start a Business needs Temporal's compensation guarantee — n8n has no built-in equivalent. Once Temporal is the engine of record for that one workflow, running n8n for the other four buys nothing: it means two orchestration engines, two failure models, two places to debug when a cross-module workflow breaks, for capability Temporal already has. Annual Renewal Campaign reinforces this independently of rollback — looping through thousands of certificate holders in n8n has no resume if it crashes mid-batch; the same workflow in Temporal resumes exactly where it stopped. Standardizing on the engine with both guarantees — rollback and crash-resume — is simpler than deciding, workflow by workflow, which of two engines it needs.
 
 **OpenFn: not the right tool here.**  
 OpenFn is designed for ETL and data integration between systems. It is good at mapping and transforming data between APIs. It is not designed for long-running sagas with compensation, parallel execution with wait-for-all, or human-in-the-loop mid-workflow. Not recommended for any of the 5 workflows.
 
-**Temporal: right for Start a Business, overkill for the other 4.**  
-The unique Temporal value is durable execution + saga compensation: if step 3 fails after steps 1-2 succeeded, Temporal runs the rollback automatically and resumes. This is exactly what Start a Business needs (three parallel applications — one failure must roll back the others). It is not needed for read-heavy workflows like Commissioner's Brief.
-
 ### Recommendation
 
-**Start with n8n for all 5.** n8n is already deployed. Setup overhead is near-zero. The visual editor makes the workflow logic reviewable without reading code. For the compensation edge case in Start a Business, handle it explicitly in n8n with error branches initially.
-
-**Introduce Temporal specifically for Start a Business** when the n8n version proves brittle on compensation — this is predictable, not speculative. The DIGIT API calls are identical between n8n and Temporal; only the orchestration layer changes when migrating.
+**Temporal for all 5 cross-module workflows.** Not because all 5 need saga compensation — only Start a Business does — but because once Temporal is required for that one workflow, using a second engine (n8n) for the rest adds an operational surface without adding capability. One engine, one failure model, one place to look when something breaks.
 
 **Build order:**
-1. Commissioner's Brief (n8n, read-only, safe to iterate)
-2. Revenue Recovery (n8n, write-heavy but single-path)
-3. Post-disaster Triage (n8n, webhook-triggered)
-4. Annual Renewal Campaign (n8n, with resume logic for batch)
-5. Start a Business (n8n first → Temporal when compensation is needed)
+1. Commissioner's Brief (Temporal, read-only, safe to iterate)
+2. Revenue Recovery (Temporal, write-heavy but single-path)
+3. Post-disaster Triage (Temporal, webhook/schedule-triggered)
+4. Annual Renewal Campaign (Temporal, durable execution handles batch resume natively)
+5. Start a Business (Temporal, saga compensation)
 
 **Confirmation gate placement:** Human YES/NO confirmation sits before the workflow is triggered — the user confirms the whole workflow at entry, not each individual API call mid-execution.
 
@@ -791,7 +805,7 @@ The remaining cross-entity needs are handled by either response enrichment (plat
 | P4 | Confirmation gate *(inside MCP server — not a separate service)* | AI Execution | Platform team, 1 developer | 3-4 days | P3 |
 | P5 | Audit log writer *(inside MCP server — not a separate service)* | AI Execution | Platform team, 1 developer | 2-3 days | P3 |
 | P6 | RAG V5 — diagram ingestion (specs go into MCP, not RAG) | AI Execution | Platform team, 1 developer | 3-5 days | P2a, P2b |
-| P7 | 5 cross-module workflows (n8n first, Temporal for Start a Business) | AI Execution | Platform team, 1-2 developers | 3-4 weeks | P1b, P3 |
+| P7 | 5 cross-module workflows (Temporal for all 5 — saga compensation for Start a Business, durable execution for the rest) | AI Execution | Platform team, 1-2 developers | 4-6 weeks | P1b, P3 |
 
 **What's eliminated vs the original mini project list:**
 - Semantic layer → eliminated
