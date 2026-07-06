@@ -6,11 +6,19 @@ DIGIT 3.0 already exists. Sixteen platform services. Eighteen domain products. J
 
 The missing piece is not more platform. The missing piece is that no LLM can currently operate it.
 
-Give Claude the DIGIT codebase and terminal access. For a developer in a sandbox this works — Claude has been used to implement services using the client library and configure DIGIT via CLI commands. But this is a developer operating as a service account in a controlled environment.
+A developer can give Claude the DIGIT codebase in their IDE. Claude reads it, helps write code, executes commands. That works — for one developer, in a development environment, producing code as output.
 
-For operational use, this breaks down. A city administrator cannot operate via terminal. When Claude calls a DIGIT API on behalf of a user, that user's identity must propagate — DIGIT's own RBAC must see the right person, not a service account. Every write needs an enforced confirmation step, not a comment in a conversation. Every AI-initiated action needs to be logged: who asked, what Claude decided, what executed, what came back.
+That is not the problem this proposal solves.
 
-Repo access enables development. MCP enables operations.
+DIGIT is used operationally by city commissioners, state officials, municipal staff, and field workers across hundreds of cities. They do not have an IDE. They work in running systems against live data. When a city administrator asks "which complaints have been open more than 30 days in Ward 5", they want the answer — from the live system, right now. Not code that someone else has to run.
+
+Three things repo access in an IDE cannot do:
+
+- **It cannot reach live data.** The codebase is static files. Answering real operational questions requires calling a running DIGIT instance.
+- **It cannot scale to non-technical users.** There are thousands of city officials, state officers, and field workers across hundreds of ULBs. You cannot give each of them a code repository and an IDE.
+- **It is not safe for production.** An LLM with full repo access and terminal can do anything — push code, delete files, run arbitrary commands. In a live government system you need a controlled surface: only the DIGIT APIs, with the user's own identity, with confirmation before every write, with a log of every action.
+
+MCP is that controlled surface. It is how an LLM operates DIGIT on behalf of any user — not just a developer, and not just in development.
 
 That is the gap this proposal closes.
 
