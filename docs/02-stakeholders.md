@@ -28,15 +28,21 @@ Citizens never interact with DIGIT directly. They interact with apps. Whether th
 **Who:** eGov engineers, state implementation partners, city IT teams onboarding a new ULB.
 
 **What they need:**
-- Configure a new city: account creation, tenant setup, user hierarchy, role assignment, MDMS data, workflow definitions, boundary hierarchy, idgen formats, notification templates
-- Currently: API calls, digit-cli, documentation
+- Understand the platform quickly: what APIs exist, what sequences are required, what a valid workflow definition looks like
+- Currently: digit-specs (16 OpenAPI files), digit-client (Java), digit-cli, documentation
 
 **What AI adds:**
-- Natural language guided setup instead of API-by-API configuration
-- State-aware: "You need to create an account before configuring workflow" — enforced, not just advised
-- Error prevention: "This workflow already exists with a different definition — do you want to update it?"
+- Documentation Q&A via RAG: "what fields are required for workflow creation?", "what's the correct order for city setup?" — Layer 1, not execution
+- Spec exploration and test case generation in developer/sandbox environments
 
-**Risk tolerance:** Medium. Mistakes in setup are fixable. But some operations (deleting data, misconfiguring RBAC) have downstream consequences.
+**What AI does NOT add here:**
+- Configuration of production environments: city configuration happens once per city, not at scale. This is a one-time operation, not a recurring AI problem.
+- Cross-tenant template borrowing: DIGIT's tenant isolation means one city's boundary hierarchy, MDMS config, and workflow definitions cannot be read by another city's setup process. "Import from similar cities" is architecturally impossible.
+- Zero-knowledge production onboarding: implementation teams arrive trained. The onboarding scenario where an org configures a production DIGIT environment with no prior knowledge does not reflect real deployments. Sandbox and developer environments are different.
+
+**Risk tolerance:** N/A for production writes — AI-assisted production configuration is out of scope. Developer environments: high (sandboxed).
+
+**Where AI genuinely helps this group:** Layer 1 — documentation and spec Q&A. Not Layer 2 execution on production systems.
 
 ---
 
@@ -108,12 +114,12 @@ Citizens never interact with DIGIT directly. They interact with apps. Whether th
 
 ## What This Means for the AI Layer Design
 
-| Stakeholder | Read ops | Write ops | Confirmation needed | 
-|---|---|---|---|
-| Implementation teams | Low risk | Medium risk | Yes, for all writes |
-| City administrators | Low risk | High risk | Yes, mandatory |
-| State officials | Low risk | None needed | N/A |
-| Developers | Low risk | Low risk (dev env) | Recommended |
-| AI agents | Inherited from caller | Inherited from caller | Always |
+| Stakeholder | Read ops | Write ops | Confirmation needed | AI value |
+|---|---|---|---|---|
+| Implementation teams | Low risk | Out of scope (production) | N/A | Layer 1 only — documentation Q&A, sandbox exploration |
+| City administrators | Low risk | High risk | Yes, mandatory | Layer 2 + Layer 3 — operational intelligence, cross-domain synthesis |
+| State officials | Low risk | None needed | N/A | Layer 2 + Layer 3 — cross-city intelligence, anomaly detection |
+| Developers | Low risk | Low risk (dev env) | Recommended | Layer 1 — spec exploration, code generation |
+| AI agents | Inherited from caller | Inherited from caller | Always | All layers — executes on behalf of above stakeholders |
 
 The AI layer must propagate the authenticated user's identity to DIGIT's APIs. The AI never holds a service account with elevated permissions. DIGIT's own RBAC is the enforcement mechanism — the AI layer must not bypass it.

@@ -4,27 +4,11 @@
 
 DIGIT cities collectively hold years of complaint data, property tax records, workforce attendance logs, water consumption patterns, and works execution histories. Almost none of it is being read analytically. The same drain floods every July. The same road breaks every monsoon. The same non-filers exist in every property tax roll. The system has the memory. It doesn't act on it.
 
-Separately: configuring DIGIT for a new city requires months of expert effort. Implementation teams navigate API documentation, configure MDMS data, set up workflow definitions, create user hierarchies, assign roles — all through APIs designed for deterministic, human-driven workflows.
-
-AI-fying DIGIT addresses both.
+AI-fying DIGIT makes this memory actionable — at the operational layer, not the configuration layer.
 
 ---
 
 ## The End State
-
-### For Implementation Teams
-
-A new city joins DIGIT. Instead of 6-12 months of expert configuration:
-
-> "We're Madurai Municipal Corporation. 1.2 million citizens. Drainage and solid waste are our biggest problems."
-
-The AI layer:
-- Configures boundary hierarchy from existing ward data
-- Imports service definitions from similar Tamil Nadu cities already on DIGIT
-- Sets up PGR complaint types, SLA rules, workflow definitions
-- Creates user hierarchy: Commissioner → Zone Officers → Ward Engineers → Field Workers
-
-Guided, confirmed, step-by-step. The engineer approves each action before it executes. No AI autonomy on government records.
 
 ### For City Administrators
 

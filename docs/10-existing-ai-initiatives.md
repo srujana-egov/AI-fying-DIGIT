@@ -77,19 +77,18 @@ These requirements exist regardless of whether the transport is MCP, HTTP tool-u
 **Status:** In progress, ~15% done. "Rethinking for generic capability."  
 **What it is:** "Natural language to config generation" — converts natural language input into DIGIT service configurations.
 
-**Where it fits:** Layer 2 — Platform AI-Readiness.  
-This IS the digit-ai-orchestrator, described differently.
+**Where it fits:** Limited. See concern below.
 
-**The assumption that may need revisiting:**  
-The team is currently "rethinking and redesigning for a generic capability." The digit-ai-orchestrator already is that generic capability:
-- Infers intent from natural language (10 setup intents, GPT-4o-mini, 95-98% accuracy)
-- State-gates operations (can't configure workflow before account exists)
-- Proposes the operation → user confirms → executes
-- 186 tests, all offline, all passing
+**The assumption that needs revisiting:**  
+Two structural problems with AI-assisted configuration as a platform AI priority:
 
-The `rethinking` is already done. The instinct is right — what's needed is a generic, stateful, confirmable natural language → DIGIT operation system. That system exists. The question is whether to extend it (add more intents for more service configurations) or build a parallel system that solves the same problems again.
+1. **One-time, not at-scale:** City configuration happens once per city. This is a developer productivity tool, not a recurring AI problem at scale. The real at-scale AI problems are operational — thousands of complaints per day, daily administrator briefs, monthly renewal campaigns.
 
-Rebuilding from scratch means also rebuilding: session management, YES/NO confirmation pattern, state gating logic, keyword fallback when AI fails, and test infrastructure. All of this is already in the orchestrator and tested.
+2. **Tenant isolation prevents cross-city templates:** DIGIT's multi-tenant architecture means one city cannot read another city's MDMS config, boundary hierarchy, or workflow definitions. The premise of "learn from similar cities already on DIGIT" does not work architecturally.
+
+3. **No real-world zero-knowledge production onboarding:** Implementation teams arrive trained. Organisations do not configure production DIGIT environments with zero prior knowledge. This use case is sandbox/developer environments only.
+
+**What this means for the initiative:** The confirmation gate mechanism (natural language → confirm → execute) is still correct and is needed at the platform level — but for **operational use cases** (city admin approving a workflow transition, executing a batch renewal), not configuration. The initiative should be redirected toward those operational flows, not extended to cover more configuration intents.
 
 ---
 

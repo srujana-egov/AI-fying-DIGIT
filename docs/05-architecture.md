@@ -172,7 +172,9 @@
 
 ## Data Flows
 
-### Flow 1: Implementation Team Sets Up a City
+### Flow 1: Developer Configures a Service (Sandbox / Developer Productivity)
+
+**Note:** City configuration is a one-time operation per city, not a recurring at-scale AI problem. DIGIT's tenant isolation also means one tenant's config cannot be borrowed as a template for another — each city's boundary hierarchy, MDMS data, and workflow definitions are isolated. This flow is valuable as a developer productivity tool in sandbox and staging environments. The at-scale operational value is in Flows 2 and 3.
 
 ```
 Engineer: "configure workflow for property tax"
