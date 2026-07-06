@@ -181,20 +181,44 @@ Alert Engine (cron / on-demand)
 - Urgency stored on submission in `additionalDetails` JSONB field
 - Work orders created via DIGIT PGR API when engineer accepts from dashboard
 
-### What It Proves
-This is not a feature. It is a **replicable pattern**:
+### What It Proves — and What It Does Not
+
+**What is replicable:**
 
 ```
-Domain intelligence microservice (/analyze, /recurrence, /severity)
-    +
-Voice/AI-assisted citizen intake
-    +
-Admin intelligence dashboard
-    +
-Proactive alert engine
+AI Flagging Microservice
+  — submitted data inconsistency detection
+  — example: complaint text says "drain overflow" but
+    citizen selected "Road Repair" → flag mismatch
+  — generalizes to: any DIGIT data entry where declared
+    values can be checked against expected values
+
+Proactive Alert Engine
+  — recurrence detection → alert before complaint arrives
+  — seasonal patterns → preventive action in June, not July
+
+AI-assisted citizen intake
+  — voice → text → AI service code suggestion
+  — citizen can accept or override; dropdown still works normally
 ```
 
-PGR done → Property Tax next → HCM next → Water & Sewerage next. Each domain gets the same architecture.
+**What is NOT replicable as a platform pattern:**
+
+The Admin Intelligence Dashboard (map, choropleth, alert inbox) — PowerBI, DSS, and similar tools already do visualization. eGov does not need to build another dashboard. The intelligence layer surfaces flags and alerts via DIGIT APIs. Revenue officials and administrators use their existing visualization tools on top.
+
+**The generalizable abstraction is AI flagging:**
+
+| Domain | Submitted data | External signal | Flag |
+|---|---|---|---|
+| PGR | Selected service code | AI text classification | Mismatch → flag for review |
+| HCM | Age + marital status | Domain rules | Inconsistency → flag |
+| HCM | Age + pregnancy field | Age rules (under 16) | Flag for field verification |
+| Trade License | Declared use (residential) | GIS land-use data | Revenue gap → flag |
+| Property Tax | Declared floor area | Satellite measurement | Under-declaration → flag |
+
+The pattern: AI compares declared/submitted values in DIGIT records against expected values (from rules, models, or external data). Flags are written back to DIGIT records. No separate dashboard — query flagged records via DIGIT APIs.
+
+PGR done → HCM next → Trade License / Property Tax (GIS-based revenue intelligence) next.
 
 ---
 
@@ -245,6 +269,8 @@ Full DIGIT documentation: API specs (the 16 digit-specs files), process guides, 
 | Does DIGIT need a capability surface? | Yes. The DIGIT MCP experiment proved this. |
 | Does DIGIT need a safety layer? | Yes. The orchestrator proves this. |
 | Are they the same thing? | No. They compose. |
-| Does DIGIT need domain intelligence? | Yes. The intern project proves the pattern. |
+| Does DIGIT need domain intelligence? | Yes. The intern project proves the flagging pattern. |
 | Does DIGIT need a knowledge layer? | Yes. RAG V5 proves the architecture. |
+| Does AI flagging generalize beyond PGR? | Yes — HCM (age/status rules), Trade License (GIS vs declared use), Property Tax (area discrepancy), Water (consumption vs category). Same pattern, different domain rules and external signals. |
+| Should dashboards be built on top of flags? | No. PowerBI, DSS, and existing visualization tools are the right layer for this. eGov builds the intelligence and flags records via DIGIT APIs. The consumer visualizes. |
 | Does any of this replace the platform? | No. Everything calls DIGIT APIs. The platform is the foundation. |

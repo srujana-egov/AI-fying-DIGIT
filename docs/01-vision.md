@@ -26,6 +26,22 @@ No PDF. No calls. No waiting.
 
 Not complaints only. Property tax + water + works + HCM + PGR — composite, ranked, actionable. Across all DIGIT-running cities simultaneously.
 
+### For Revenue Intelligence
+
+> "Which businesses declared residential use in their license application but GIS data shows they're operating commercially?"
+
+A business pays less tax by declaring residential use. GIS and satellite imagery say otherwise. Cross-referencing DIGIT license records against GIS land-use data surfaces the gap. Estimated revenue recovery per city: significant.
+
+The same pattern works across domains:
+- **Trade License vs GIS**: declared use ≠ actual use → revenue gap
+- **Property Tax vs satellite imagery**: declared floor area ≠ measured area → under-declaration
+- **Water connection vs consumption**: declared usage category ≠ actual consumption pattern → mis-tariffing
+- **HCM microplanning vs rooftops**: population register ≠ satellite rooftop count → invisible population
+
+In every case: declared data in DIGIT records is cross-referenced against an external ground-truth signal (GIS, satellite, field surveys). The AI surfaces the discrepancy. The government collects the gap.
+
+This is not a dashboard. The intelligence layer flags records in DIGIT. Revenue officials query flagged records via DIGIT APIs. Visualization is their tool (PowerBI, DSS — not something eGov builds on top).
+
 ### For the Platform Itself
 
 Any AI agent — Claude, GPT, a custom orchestrator — can call DIGIT via an MCP server auto-generated from the clean OpenAPI 3.0.3 specs. The agent queries the workflow service to know what transitions are valid right now. It does not reason about what's possible — it asks the platform.
