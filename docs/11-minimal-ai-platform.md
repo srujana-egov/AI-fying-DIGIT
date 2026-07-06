@@ -186,6 +186,8 @@ state (unlock for state officials):
 
 This grouping is a one-time design decision. After that, add a spec → get a tool automatically.
 
+**Which APIs actually become tools.** Not every endpoint in a spec should. The criterion is not platform vs application — it's whether the endpoint answers a real, standalone request, or is an internal step that only makes sense as part of a transaction someone else already sequences correctly. Reads and lookups are exposed at both levels, because they're shared context every task needs — `individual_search`, `boundary_get`, `mdms_search`, `workflow_get_transitions` are all in the core 8 despite being platform, not application, services. Writes are exposed when they are the complete unit of work a human is asking for — an application-level action (`certificate_apply`, `certificate_transition`), or a platform-level one that is genuinely standalone (`idgen_configure`, `workflow_definition_create` — one-time setup, not a step inside a live transaction). What does not become a tool: platform-level writes that are steps inside another operation's own sequencing — raw ID generation, raw workflow-instance initiation, raw notification dispatch. `certificate_apply` already calls idgen and workflow internally, in a specific order, with rollback if one fails (see the interaction diagram above). Exposing `idgen_generate` as its own callable tool would let an agent call it out of that sequence — an ID tied to nothing, or a step skipped that the application layer would otherwise enforce. The rule: expose the transaction, not its internals.
+
 ---
 
 **2. Confirmation gate — ~100 lines, not a framework**

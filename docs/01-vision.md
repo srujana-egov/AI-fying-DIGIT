@@ -68,4 +68,8 @@ These 5 patterns apply across all 18 DIGIT domain products. See [AI Patterns Acr
 
 The platform is the leverage point. AI built once at the platform layer is inherited by every domain, every city, every stakeholder.
 
+This is what that leverage looks like in practice. Once the platform layer exists — specs at standard, the MCP server, the confirmation gate — adding a new chatbot on top of it is small: a chat panel, a backend loop that sends the user's message and the shared MCP tools to an LLM, and a confirmation card when the reply is a write. Weeks of engineering, not months, and the same shape every time — an HCM console copilot, a PGR assistant, a WhatsApp bot — because the hard part (auth, tool schemas, safety, audit) was already built once, at the platform layer, not per chatbot.
+
+This does not unlock everywhere on the same day. MCP tools are generated from each product's spec — a 2.9-era spec still produces unusable tools. A product's chatbot becomes this cheap only after that product's spec is raised to the certificate-service standard. The rollout is sequential, product by product, gated by spec quality — not a single switch that turns on for all eighteen domain products at once.
+
 DIGIT does not change. It becomes AI-operable.
