@@ -4,28 +4,59 @@ This replaces the earlier mini projects doc. Based on the conversation with the 
 
 ---
 
-## 1. Raise All Specs to Certificate Service Standard
+## 1. Raise All Specs to the Right Standard
+
+There are **two levels of specs**, and they need different things. See [13 — Two-Level Spec Architecture](13-two-level-spec-architecture.md) for the full picture.
+
+---
+
+### P1a — Platform Services: Improve (not rewrite)
 
 **Owner:** Platform team (Ghanshyam's team)  
+**Effort:** ~1 week per service  
+**Services:** The 16 in `digitnxt/digit-specs/v3.0.0` — workflow, individual, boundary, idgen, mdms, localization, notification, filestore, account, accesscontrol, employee, billing-payment, otp, registry, url-shortener, common
+
+These are already OpenAPI 3.0.3 with clean design. The gap is not a rewrite — it is targeted additions:
+
+| Gap | What to add |
+|---|---|
+| Examples | 2-3 realistic examples per write operation |
+| Idempotency | `Idempotency-Key` header on all writes |
+| Internal cross-service deps | Document in description field (e.g. "workflow service calls notification service on every transition") |
+| Error semantics | Typed responses where still generic (409, 403, 404, 422) |
+
+**Checklist per platform spec:**
+```
+□ 2+ realistic examples per write endpoint
+□ Idempotency-Key header on all write operations
+□ Description field names any internal service calls
+□ Error responses: 400, 403, 404, 409, 500 — all typed
+□ No opaque codes in response fields
+```
+
+---
+
+### P1b — Application Services: Rewrite to Certificate Standard
+
+**Owner:** Platform team + service owners  
 **Effort:** ~3-4 weeks per service  
-**Services:** tl-service, bpa, property-services, fire-noc, water-sewerage, pgr, birth-registration (7 services)
+**Services:** tl-service, bpa, property-services, fire-noc, water-sewerage, pgr, birth-registration (7 old 2.9-era specs)
 
-### The gap is a rewrite, not a revision
+These are Swagger 2.0 files. The gap is too large for incremental fixes. Full rewrite using `Certificate-3.0.0.yaml` (from `digitnxt/license-certificate`) as the template.
 
-| Property | Current specs | Certificate standard |
+| Property | Current old specs | Certificate standard |
 |---|---|---|
-| OpenAPI version | Swagger 2.0 (tl-service) / OpenAPI 3.0 (pgr) | OpenAPI 3.0.3 |
-| Request pattern | POST-only with `RequestInfo` wrapper in body | REST: GET for reads, POST for writes, no wrapper |
-| tenantId | Query parameter in every call | Resolved from Bearer token — not in body or query |
+| OpenAPI version | Swagger 2.0 / early OpenAPI 3.0 | OpenAPI 3.0.3 |
+| Request pattern | POST-only with `RequestInfo` wrapper in body | REST: GET reads, POST writes, no wrapper |
+| tenantId | Query parameter in every call | Resolved from Bearer token |
 | Codes | Opaque: integer IDs, short codes | Human-readable: `LICENSE`, `TRADE`, `INSTITUTION` |
-| Descriptions | 1-2 sentences | Business logic, validation rules, holder/applicant distinction |
+| Descriptions | 1-2 sentences | Business logic, validation rules, 3-10 lines |
 | Examples | None | Realistic examples for every endpoint |
 | Idempotency | None | `Idempotency-Key` header on all writes |
 | Error semantics | Generic `ErrorRes` | Typed: 409 duplicate, 403 inactive, 404 not found, 422 validation |
 | Cross-service deps | Not mentioned | Named explicitly ("calls IDGen, Workflow, FileStore") |
 
-### Checklist per spec (use this to evaluate each one)
-
+**Checklist per application spec:**
 ```
 □ OpenAPI 3.0.3 (not Swagger 2.0)
 □ No RequestInfo wrapper in request body
@@ -34,12 +65,12 @@ This replaces the earlier mini projects doc. Based on the conversation with the 
 □ Every operation has: summary (1 line) + description (business logic, 3-10 lines)
 □ Every write endpoint has at least 2 realistic examples
 □ Every write endpoint has Idempotency-Key header
-□ Error responses: 400 (validation), 403 (forbidden), 404 (not found), 409 (conflict), 500
+□ Error responses: 400, 403, 404, 409, 500 — all typed
 □ Cross-service dependencies named in the description field
-□ Response fields are human-readable (no opaque codes in responses)
+□ Response fields are human-readable
 ```
 
-**AI team's contribution to this project:** Can run an automated gap analysis script against each spec and produce a report of what's missing vs the checklist. Speeds up the platform team's work.
+**AI team's contribution:** Can run an automated gap analysis script against each spec and produce a checklist report. Speeds up the platform team's work.
 
 ---
 
@@ -49,9 +80,40 @@ This replaces the earlier mini projects doc. Based on the conversation with the 
 **Effort:** 2-3 days per service (after specs are done)  
 **Format:** websequencediagrams text source (same as Ghanshyam's format) — NOT PNG, NOT drawn
 
-### Which operations need diagrams
+Interaction diagrams are needed at **both levels**, but they answer different questions.
 
-Not every endpoint. Only operations with cross-service calls. For most DIGIT services, this is 3-4 operations:
+---
+
+### P2a — Platform Internal Diagrams
+
+**Question:** How does this platform service work internally?
+
+These show the internal behavior of each platform service — what happens inside workflow when a transition is executed, what happens inside idgen when a number is generated. They live in `digit-specs/v3.0.0` alongside each service spec.
+
+Not every operation. Only operations with non-trivial internal logic:
+
+| Service | Operations needing diagrams |
+|---|---|
+| workflow | executeTransition (state validation, role check, notification trigger), getProcessDefinition |
+| individual | create (duplicate check, ID assignment), search |
+| idgen | generate (format resolution, sequence increment, lock/release) |
+| filestore | upload (virus scan, storage, ID assignment) |
+| mdms | search (hierarchy traversal), create |
+| localization | resolve (fallback chain) |
+| boundary | getHierarchy, search |
+| account | create (OTP flow, initial role assignment) |
+
+~2-3 diagrams per platform service × 16 services = **~35-48 platform diagrams total**
+
+---
+
+### P2b — Application Cross-Service Diagrams
+
+**Question:** How does this application orchestrate platform services?
+
+These show how application services (certificate, PGR, trade license, etc.) call platform services in sequence. They live alongside the application spec. This is the diagram type Ghanshyam's websequencediagrams example showed.
+
+Not every endpoint. Only operations with cross-service calls:
 
 | Operation type | Needs diagram? | Why |
 |---|---|---|
@@ -62,7 +124,7 @@ Not every endpoint. Only operations with cross-service calls. For most DIGIT ser
 | Search / List | Usually no | Single service, no cross-service calls |
 | Get by ID | No | Single service |
 
-For 7 services × ~4 operations = **~28 diagrams total**.
+~4 diagrams per application service × 7 services = **~28 application diagrams total**
 
 ### Exact template required for AI to understand everything
 
@@ -423,15 +485,17 @@ The remaining cross-entity needs are handled by either response enrichment (plat
 
 ## Summary — The Revised Mini Project List
 
-| # | Project | Owner | Effort | Blocks |
-|---|---|---|---|---|
-| P1 | Raise all 7 specs to certificate standard | Platform team | 3-4 wks/service | Everything |
-| P2 | Add interaction diagrams (~28 total) | Platform team | 2-3 days/service | MCP quality, RAG quality |
-| P3 | MCP server (auto-generate from specs) | AI team, 1 developer | 2 weeks | P1 |
-| P4 | Confirmation gate | AI team, 1 developer | 1 week | P3 |
-| P5 | Audit log writer | AI team, 1 developer | 3 days | P3 |
-| P6 | RAG V5 — endpoint-aware chunking + spec ingestion | AI team (Srujana) | 1-2 weeks | P1, P2 |
-| P7 | Temporal setup + 5 cross-module workflows | AI team, 1-2 developers | 4-6 weeks | P1, P3 |
+| # | Project | Level | Owner | Effort | Blocks |
+|---|---|---|---|---|---|
+| P1a | Improve 16 platform specs (examples, idempotency, internal deps) | Platform | Platform team | 1 wk/service | P2a, P3 |
+| P1b | Rewrite 7 application specs to certificate standard | Application | Platform team + service owners | 3-4 wks/service | P2b, P3 |
+| P2a | Platform internal diagrams (~35-48 total, ~2-3 per service) | Platform | Platform team | 1-2 days/service | MCP quality, RAG quality |
+| P2b | Application cross-service diagrams (~28 total, ~4 per service) | Application | Platform team | 2-3 days/service | MCP quality, RAG quality |
+| P3 | MCP server (auto-generate from specs — both levels) | AI Execution | AI team, 1 developer | 2 weeks | P1a, P1b |
+| P4 | Confirmation gate | AI Execution | AI team, 1 developer | 1 week | P3 |
+| P5 | Audit log writer | AI Execution | AI team, 1 developer | 3 days | P3 |
+| P6 | RAG V5 — endpoint-aware chunking + spec ingestion | AI Execution | AI team (Srujana) | 1-2 weeks | P1a, P1b, P2a, P2b |
+| P7 | Temporal setup + 5 cross-module workflows | AI Execution | AI team, 1-2 developers | 4-6 weeks | P1b, P3 |
 
 **What's eliminated vs the original mini project list:**
 - Semantic layer → eliminated
