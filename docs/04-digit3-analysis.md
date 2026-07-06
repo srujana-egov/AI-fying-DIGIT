@@ -21,7 +21,7 @@ A complete command-line interface covering:
 - Access control
 - Multi-context configuration with authentication
 
-**Implication for the AI layer:** digit-cli closes the "no CLI for DIGIT" gap. The onboarding problem Chakshu identified is solved. However, Chakshu's auto-generated CLI is *architecturally different* from digit-cli and is not made redundant by it. Chakshu's CLI derives directly from the same Tool Registry that powers MCP — add one tool definition and you get CLI command + MCP tool + test coverage automatically, with zero per-tool code. digit-cli is independently maintained; it and the Tool Registry will diverge over time as tools are added. This is a design question the platform team should decide: unify on registry-derived CLI, or maintain two separate CLIs for different audiences.
+**Implication for the AI layer:** digit-cli closes the "no CLI for DIGIT" gap. The onboarding problem the 2.9 experiment identified is solved. However, the auto-generated CLI from the 2.9 experiment is *architecturally different* from digit-cli and is not made redundant by it. That CLI derives directly from the same Tool Registry that powers MCP — add one tool definition and you get CLI command + MCP tool + test coverage automatically, with zero per-tool code. digit-cli is independently maintained; it and the Tool Registry will diverge over time as tools are added. This is a design question the platform team should decide: unify on registry-derived CLI, or maintain two separate CLIs for different audiences.
 
 ---
 
@@ -55,7 +55,7 @@ Design characteristics that matter for AI consumption:
 - Clean, consistent schema design across services
 - Well-documented operation descriptions
 
-**Implication for the AI layer:** These specs are clean enough that a tool registry can be auto-generated from them, not hand-authored. Chakshu's 61 hand-written tools exist because DIGIT 2.9 APIs were not self-describing. DIGIT 3.0 specs are. An OpenAPI Generator run against digit-specs produces correct, useful tool definitions for an MCP server.
+**Implication for the AI layer:** These specs are clean enough that a tool registry can be auto-generated from them, not hand-authored. The 61 hand-written tools in the 2.9 experiment exist because DIGIT 2.9 APIs were not self-describing. DIGIT 3.0 specs are. An OpenAPI Generator run against digit-specs produces correct, useful tool definitions for an MCP server.
 
 ---
 
@@ -94,9 +94,9 @@ No custom state-gating code needed for workflow-managed operations.
 
 ---
 
-## The Convergence: Chakshu's 6 Layers vs DIGIT 3.0
+## The Convergence: DIGIT MCP (2.9) Layers vs DIGIT 3.0
 
-| Chakshu's 2.9 Layer | Problem It Solved | DIGIT 3.0 Status |
+| 2.9 MCP Layer | Problem It Solved | DIGIT 3.0 Status |
 |---|---|---|
 | CLI (auto-generated from registry) | No command-line access to the platform | **Partially addressed.** digit-cli exists. But it's separately maintained — not derived from the same registry as MCP tools. |
 | Progressive disclosure (8 tools → unlock) | 61 tools in context degrades AI accuracy | **Not addressed by 3.0.** Still required regardless of how clean the specs are. |
@@ -112,7 +112,7 @@ No custom state-gating code needed for workflow-managed operations.
 3. Confirmation + intent layer (orchestrator pattern)
 4. Cross-module skills (where workflow service can't help)
 
-The difference from 2.9 is magnitude, not kind. The work is lighter because the specs are better. The architectural decisions Chakshu made remain correct.
+The difference from 2.9 is magnitude, not kind. The work is lighter because the specs are better. The architectural decisions the 2.9 experiment made remain correct.
 
 ---
 
@@ -145,4 +145,4 @@ The difference from 2.9 is magnitude, not kind. The work is lighter because the 
 ### Decision Points for the Platform Team
 - **CLI architecture:** Adopt registry-derived CLI (add tool once → CLI + MCP + tests), or maintain digit-cli as a separate codebase alongside the MCP tool registry?
 - **Progressive disclosure groups:** When generating the MCP server from digit-specs, define which tools load on startup (core 8) and which require `enable_tools`. This is a design decision, not an implementation detail.
-- **`@digit-mcp/data-provider` adaptation:** Port Chakshu's resolution package to 3.0 API responses rather than rebuilding entity resolution from scratch.
+- **`@digit-mcp/data-provider` adaptation:** Port the `@digit-mcp/data-provider` resolution package to 3.0 API responses rather than rebuilding entity resolution from scratch.

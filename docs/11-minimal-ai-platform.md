@@ -28,7 +28,7 @@ These are 2.9-era specs. Opaque codes, minimal descriptions, RequestInfo wrapper
 
 **What raising all 7 specs to this standard eliminates:**
 
-| What Chakshu built for 2.9 | Why it existed | Status at certificate standard |
+| What the 2.9 experiment built | Why it existed | Status at certificate standard |
 |---|---|---|
 | 61 hand-authored tool definitions | 2.9 specs too opaque for AI | **Eliminated** — auto-generate from specs |
 | Semantic layer (`@digit-mcp/data-provider`) | Codes uninterpretable | **Eliminated** — codes are already human-readable |
@@ -82,8 +82,8 @@ Service->FileStore: validate(documents[])
 Service-->Client: 201 Certificate (applicationNumber, workflowInstanceId)
 ```
 
-Ghanshyam's sequence diagram format (websequencediagrams) is correct.  
-What it needs that the example diagram didn't have: prerequisites, data on arrows, failure alt block.  
+The agreed sequence diagram format (websequencediagrams) is correct.  
+What it needs that the reference diagram didn't have: prerequisites, data on arrows, failure alt block.  
 This is the only format change needed — not the YAML manifest.
 
 ---
@@ -119,7 +119,7 @@ Protected (validate JWT → propagate downstream):
   everything else
 ```
 
-Ghanshyam's observation is correct: if the gateway sits above everything and requires JWT for all calls, account creation deadlocks. The whitelist solves the bootstrap problem. After account creation and login, the user's JWT propagates on every downstream call. DIGIT's own RBAC enforces what that JWT can do.
+If the gateway sits above everything and requires JWT for all calls, account creation deadlocks. The whitelist solves the bootstrap problem. After account creation and login, the user's JWT propagates on every downstream call. DIGIT's own RBAC enforces what that JWT can do.
 
 ---
 
@@ -277,16 +277,16 @@ No semantic layer. No tool registry. No custom intent classifier. No skills for 
 
 ### Directly relevant — should be coordinated under this architecture
 
-| # | Initiative | Owner | Role in architecture | Direction |
-|---|---|---|---|---|
-| 2 | LLM guidance chatbot | Sruthi + Srujana | RAG V5 — Layer 1 | Keep. Expand knowledge base to include all specs + interaction diagrams. |
-| 5 | MCP for DIGIT PGR | Naveen J | MCP Server — Layer 2 | Generalize. Don't build PGR-specific — build the generator that produces MCP from any spec. PGR is the first test case, not the final scope. |
-| 8 | Service Config AI Agent | Jagan | Confirmation gate — Layer 2 | Redirect. The confirmation gate IS this project. Don't rebuild session, auth, confirmation from scratch — extend the orchestrator pattern. |
-| 13 | Console config chatbot | Sruthi/Naveen R | Layer 1 + Layer 2 | Don't build RAG for config generation — RAG answers questions, it can't execute. Wire RAG V5 (questions) + confirmation gate (actions) with a thin intent router between them. |
-| 17 | HCM support chatbot | Shaowni | Layer 2 + Layer 4 | Keep. This is the HCM-facing interface to the shared Layer 2. Should call the MCP server, not embed its own AI logic. |
-| 19 | HCM conversational data layer | Ankit/Vishal | Layer 2 (conversational) + Layer 3 (fraud) | Split the two concerns. Fraud detection = Layer 3 intelligence microservice (domain-specific). Conversational data layer = shared Layer 2, not HCM-specific. |
-| 20 | PGR integration with Temporal | Vinoth | Cross-module orchestration | Critical. Temporal is the right engine for cross-module workflows. Scope should expand beyond PGR to all five key cross-module flows. |
-| 22 | HCM Console AI Copilot | Ram | Layer 4 application | Keep as the application pattern. Ensure it calls the shared MCP server + confirmation gate rather than embedding its own AI layer. |
+| # | Initiative | Role in architecture | Direction |
+|---|---|---|---|
+| 2 | LLM guidance chatbot | RAG V5 — Layer 1 | Keep. Expand knowledge base to include all specs + interaction diagrams. |
+| 5 | MCP for DIGIT PGR | MCP Server — Layer 2 | Generalize. Don't build PGR-specific — build the generator that produces MCP from any spec. PGR is the first test case, not the final scope. |
+| 8 | Service Config AI Agent | Confirmation gate — Layer 2 | Redirect. The confirmation gate IS this project. Don't rebuild session, auth, confirmation from scratch — extend the orchestrator pattern. |
+| 13 | Console config chatbot | Layer 1 + Layer 2 | Don't build RAG for config generation — RAG answers questions, it can't execute. Wire RAG V5 (questions) + confirmation gate (actions) with a thin intent router between them. |
+| 17 | HCM support chatbot | Layer 2 + Layer 4 | Keep. This is the HCM-facing interface to the shared Layer 2. Should call the MCP server, not embed its own AI logic. |
+| 19 | HCM conversational data layer | Layer 2 (conversational) + Layer 3 (fraud) | Split the two concerns. Fraud detection = Layer 3 intelligence microservice (domain-specific). Conversational data layer = shared Layer 2, not HCM-specific. |
+| 20 | PGR integration with Temporal | Cross-module orchestration | Critical. Temporal is the right engine for cross-module workflows. Scope should expand beyond PGR to all five key cross-module flows. |
+| 22 | HCM Console AI Copilot | Layer 4 application | Keep as the application pattern. Ensure it calls the shared MCP server + confirmation gate rather than embedding its own AI layer. |
 
 ### Indirectly relevant — useful acceleration, not core architecture
 

@@ -1,12 +1,12 @@
 # Comparison: DIGIT MCP (2.9) vs What DIGIT 3.0 Changes
 
-This document maps Chakshu's DIGIT MCP design decisions against DIGIT 3.0's actual capabilities. The goal is not to declare a winner — it is to understand which design decisions were 2.9-specific and which are still correct regardless of platform version.
+This document maps DIGIT MCP (2.9) design decisions against DIGIT 3.0's actual capabilities. The goal is not to declare a winner — it is to understand which design decisions were 2.9-specific and which are still correct regardless of platform version.
 
-Source: Chakshu's "Building Products on DIGIT at the Speed of AI" deck (2026), verified against digitnxt/digit-specs and digitnxt/digit-client-tools.
+Source: "Building Products on DIGIT at the Speed of AI" deck (2026), verified against digitnxt/digit-specs and digitnxt/digit-client-tools.
 
 ---
 
-## Chakshu's Starting Problem
+## The Starting Problem
 
 > "DIGIT is powerful. Accessing it is hard. Every persona needs the same data — but today they each have to learn a completely different way to get it."
 
@@ -18,7 +18,7 @@ This problem statement is accurate for DIGIT 2.9. DIGIT 3.0 partially addresses 
 
 ---
 
-## His Solution: One Registry, Every Interface
+## The Solution: One Registry, Every Interface
 
 The core design insight:
 
@@ -83,7 +83,7 @@ Guided workflows that combine tools into outcomes. Composable, AI-reasoned, huma
 
 ## The Argument Against "Just Use Clean OpenAPI Specs"
 
-Chakshu's deck addresses this directly:
+The DIGIT MCP deck addresses this directly:
 
 > "Even perfect API docs can't encode: which of 26 services handles a given intent, what sequence of calls achieves a multi-step workflow, or how to recover from a partial failure mid-transaction. Tools encode that judgment as code. An LLM reading docs reconstructs it probabilistically on every call — inconsistently."
 
@@ -99,21 +99,21 @@ DIGIT 3.0's 16 OpenAPI specs are clean enough to seed a tool registry from. They
 
 ### 1. CLI — Partially addressed by 3.0
 
-| 2.9 problem | Chakshu's solution | 3.0 status |
+| 2.9 problem | 2.9 solution | 3.0 status |
 |---|---|---|
 | No CLI exists | Auto-generated from ToolRegistry | digit-cli ships with 3.0 |
 
 **What changes:** digit-cli in 3.0 already exists. The onboarding gap is closed.
 
-**What doesn't change:** digit-cli is independently maintained. Chakshu's auto-generated CLI derives from the same registry as MCP tools — add one tool, get CLI + MCP + tests automatically. 3.0's digit-cli doesn't have this property. They diverge over time.
+**What doesn't change:** digit-cli is independently maintained. The auto-generated CLI from the 2.9 experiment derives from the same registry as MCP tools — add one tool, get CLI + MCP + tests automatically. 3.0's digit-cli doesn't have this property. They diverge over time.
 
-**Verdict:** 3.0 closes the "no CLI" gap but Chakshu's registry-derived approach is architecturally cleaner for long-term maintainability.
+**Verdict:** 3.0 closes the "no CLI" gap but the registry-derived approach is architecturally cleaner for long-term maintainability.
 
 ---
 
 ### 2. Tool Registry — Partially addressed by 3.0
 
-| 2.9 problem | Chakshu's solution | 3.0 status |
+| 2.9 problem | 2.9 solution | 3.0 status |
 |---|---|---|
 | 2.9 APIs not self-describing | 61 hand-authored tools | 16 clean OpenAPI 3.0.3 specs |
 
@@ -127,7 +127,7 @@ DIGIT 3.0's 16 OpenAPI specs are clean enough to seed a tool registry from. They
 
 ### 3. Skills — Partially replaced by 3.0
 
-| 2.9 problem | Chakshu's solution | 3.0 status |
+| 2.9 problem | 2.9 solution | 3.0 status |
 |---|---|---|
 | Platform doesn't enforce process order | Skills guide AI through multi-step sequences | Workflow service exposes valid transitions |
 
@@ -135,13 +135,13 @@ DIGIT 3.0's 16 OpenAPI specs are clean enough to seed a tool registry from. They
 
 **What doesn't change:** The workflow service tells you what's *valid*. It doesn't tell you what's *wise*. `PENDING_VERIFICATION → [APPROVE, REJECT, REQUEST_MORE_INFO]` — all three are valid; choosing correctly still requires reasoning. More importantly: setup operations (city onboarding, workflow definition, idgen, boundary setup) have no workflow entity — there's nothing for the service to query. Cross-module operations (Trade License + Fire NOC + Water Connection in parallel, Revenue recovery across PT + W&S, Commissioner's brief across four modules) span separate workflows the platform doesn't coordinate. Skills for these cases are still needed.
 
-**Verdict:** 3.0 reduces skill authoring for single-entity, single-module workflow progression. It does not eliminate skills. Chakshu's strongest use cases (Revenue recovery, Commissioner's brief, Start a business) all cross module boundaries — the workflow service doesn't touch them.
+**Verdict:** 3.0 reduces skill authoring for single-entity, single-module workflow progression. It does not eliminate skills. The strongest use cases (Revenue recovery, Commissioner's brief, Start a business) all cross module boundaries — the workflow service doesn't touch them.
 
 ---
 
 ### 4. Semantic Layer — Not addressed by 3.0
 
-| 2.9 problem | Chakshu's solution | 3.0 status |
+| 2.9 problem | 2.9 solution | 3.0 status |
 |---|---|---|
 | Internal codes not human-readable | `@digit-mcp/data-provider` resolves codes to domain objects | Localization service exists but not wired for AI consumption |
 
@@ -149,13 +149,13 @@ DIGIT 3.0's 16 OpenAPI specs are clean enough to seed a tool registry from. They
 
 **What doesn't change:** The semantic layer is still required. The localization service still needs to be wired. `@digit-mcp/data-provider`'s approach — entity resolution + cross-service connection into meaningful domain objects — is still the right pattern.
 
-**Verdict:** Chakshu's semantic layer is directly applicable to 3.0 with minor adaptation. This is the layer that changes least between versions.
+**Verdict:** The semantic layer from the 2.9 experiment is directly applicable to 3.0 with minor adaptation. This is the layer that changes least between versions.
 
 ---
 
 ### 5. Progressive Disclosure — Not addressed by 3.0
 
-| 2.9 problem | Chakshu's solution | 3.0 status |
+| 2.9 problem | 2.9 solution | 3.0 status |
 |---|---|---|
 | 61 tools degrades AI accuracy | 8 core tools + `enable_tools` on demand | Not addressed by clean specs |
 
@@ -163,7 +163,7 @@ DIGIT 3.0's 16 OpenAPI specs are clean enough to seed a tool registry from. They
 
 **What doesn't change:** The progressive disclosure pattern — start minimal, unlock on demand — is still the correct architecture for AI agents operating on a large platform.
 
-**Verdict:** Chakshu's progressive disclosure design is directly applicable to 3.0. The MCP server built from digit-specs should implement the same unlock pattern.
+**Verdict:** The progressive disclosure design from the 2.9 experiment is directly applicable to 3.0. The MCP server built from digit-specs should implement the same unlock pattern.
 
 ---
 
@@ -173,7 +173,7 @@ DIGIT 3.0's 16 OpenAPI specs are clean enough to seed a tool registry from. They
 |---|---|
 | MCP is a transport, not an architecture | MCP is a transport, not an architecture |
 
-Chakshu's deck explicitly addresses protocol risk: "MCP is the thinnest layer in our stack. The Semantic Layer, Tool Registry, and domain model are all protocol-agnostic. Estimated migration effort: 1–2 sprints to swap transport. Zero tool rewrites."
+The DIGIT MCP deck explicitly addresses protocol risk: "MCP is the thinnest layer in our stack. The Semantic Layer, Tool Registry, and domain model are all protocol-agnostic. Estimated migration effort: 1–2 sprints to swap transport. Zero tool rewrites."
 
 This is correct and carries forward identically.
 
@@ -181,7 +181,7 @@ This is correct and carries forward identically.
 
 ### 7. Unit Economics — Unchanged
 
-Chakshu's slide: A city with 20,000 transactions/month, 20% AI-assisted:
+Unit economics from the 2.9 experiment: a city with 20,000 transactions/month, 20% AI-assisted:
 - AI inference cost: $40–$120/month
 - Staff time recovered: $10,000–$20,000/month
 - Return: ~100x on AI inference spend
@@ -192,7 +192,7 @@ These numbers don't change between 2.9 and 3.0. The economic case for AI-assiste
 
 ## What Needs Updating on 3.0
 
-These are things in Chakshu's 2.9 design that need adaptation for 3.0:
+These are things in the 2.9 design that need adaptation for 3.0:
 
 | Component | 2.9 approach | 3.0 adaptation needed |
 |---|---|---|
@@ -206,7 +206,7 @@ These are things in Chakshu's 2.9 design that need adaptation for 3.0:
 
 ## The Correct Synthesis
 
-Chakshu's approach and DIGIT 3.0's improvements are **not in competition**. 3.0 makes his approach cheaper and more maintainable to build. The core design decisions remain correct.
+The 2.9 approach and DIGIT 3.0's improvements are **not in competition**. 3.0 makes the 2.9 approach cheaper and more maintainable to build. The core design decisions remain correct.
 
 ```
 What 3.0 changes about the approach:
@@ -225,18 +225,18 @@ What stays exactly the same:
 └── Unit economics                          ✓ unchanged
 ```
 
-**The 6 use cases Chakshu identified (start a business, annual renewal, revenue recovery, post-disaster triage, building permit diagnosis, commissioner's brief) are the right use cases. They all work better on 3.0, not differently.**
+**The 6 use cases identified in the 2.9 experiment (start a business, annual renewal, revenue recovery, post-disaster triage, building permit diagnosis, commissioner's brief) are the right use cases. They all work better on 3.0, not differently.**
 
 ---
 
 ## What This Means for the Roadmap
 
-The AI-fying DIGIT mini projects should be informed by Chakshu's design:
+The AI-fying DIGIT mini projects should be informed by the 2.9 design:
 
-1. **MCP Server (Mini Project 3)**: Generate from digit-specs as a baseline, then implement progressive disclosure groups matching Chakshu's 14-group structure. Don't just expose all endpoints flat.
+1. **MCP Server (Mini Project 3)**: Generate from digit-specs as a baseline, then implement progressive disclosure groups matching the 14-group structure from the 2.9 experiment. Don't just expose all endpoints flat.
 
 2. **Entity Resolution (Mini Project 4)**: `@digit-mcp/data-provider` already solves this for 2.9. Port and adapt to 3.0 API responses rather than building from scratch.
 
-3. **Skills for cross-module orchestration**: Chakshu's revenue recovery and commissioner's brief use cases require skills that span Property Tax + Water + PGR + Finance. These are not solved by clean OpenAPI specs or workflow service queries. They need explicit authoring.
+3. **Skills for cross-module orchestration**: The revenue recovery and commissioner's brief use cases require skills that span Property Tax + Water + PGR + Finance. These are not solved by clean OpenAPI specs or workflow service queries. They need explicit authoring.
 
-4. **The CLI question**: Decide whether to adapt Chakshu's registry-derived CLI (add tool once → CLI + MCP + tests auto-update) or maintain digit-cli as a separate codebase. The former is more maintainable at scale.
+4. **The CLI question**: Decide whether to adopt the registry-derived CLI approach (add tool once → CLI + MCP + tests auto-update) or maintain digit-cli as a separate codebase. The former is more maintainable at scale.

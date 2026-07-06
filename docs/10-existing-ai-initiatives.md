@@ -25,9 +25,9 @@ What each team thinks they're building:
 ```
 
 When every team builds their own AI layer, you get:
-- Naveen J's MCP for PGR using one auth model
-- Ram's HCM copilot using a different auth model
-- Jagan's config agent using a third
+- MCP for PGR using one auth model
+- HCM copilot using a different auth model
+- Service config agent using a third
 - Different confirmation UX patterns across the product
 - No consistent audit trail schema
 
@@ -39,7 +39,7 @@ The platform AI layer (Layer 2) is the shared foundation that means each team on
 
 ---
 
-### Row 2 — LLM Guidance Chatbot (Sruthi + Srujana)
+### Row 2 — LLM Guidance Chatbot
 **Status:** Completed POC. Productization in progress (~70% done).  
 **What it is:** Documentation chatbot for DIGIT principles, best practices, existing code.
 
@@ -52,7 +52,7 @@ This is the RAG V5 architecture. It is already incorporated into this proposal a
 
 ---
 
-### Row 5 — MCP for DIGIT PGR (Naveen J)
+### Row 5 — MCP for DIGIT PGR
 **Status:** In progress, ~40% done. Target: Sept 2026.  
 **What it is:** MCP server for DIGIT PGR service.
 
@@ -73,7 +73,7 @@ These requirements exist regardless of whether the transport is MCP, HTTP tool-u
 
 ---
 
-### Row 8 — Service Config Creation AI Agent (Jagan)
+### Row 8 — Service Config Creation AI Agent
 **Status:** In progress, ~15% done. "Rethinking for generic capability."  
 **What it is:** "Natural language to config generation" — converts natural language input into DIGIT service configurations.
 
@@ -93,7 +93,7 @@ Rebuilding from scratch means also rebuilding: session management, YES/NO confir
 
 ---
 
-### Row 13 — AI Chatbot for Console Config Generation (Sruthi/Naveen R)
+### Row 13 — AI Chatbot for Console Config Generation
 **Status:** In progress. Tech design underway.  
 **What it is:** "AI-Powered Configuration Generation for DIGIT Flow Builder." RAG model being explored.
 
@@ -114,7 +114,7 @@ The RAG model is the right foundation for the Q&A half. The orchestrator pattern
 
 ---
 
-### Row 19 — Conversational Data Layer for HCM (Ankit/Vishal)
+### Row 19 — Conversational Data Layer for HCM
 **Status:** In progress.  
 **What it is:** "Fraud Detection and conversational data layer" for HCM.
 
@@ -210,11 +210,11 @@ If Layer 2 is built as shared platform infrastructure, every initiative above be
 
 | Capability | Who rebuilds it in isolation | Who gets it free from Layer 2 |
 |---|---|---|
-| Auth propagation (user JWT, not service account) | Naveen J, Jagan, Ram, Ankit/Vishal | All of them |
-| AI proposes → human confirms → executes | Jagan, Ram, Ankit/Vishal | All of them |
+| Auth propagation (user JWT, not service account) | Rows 5, 8, 22, 19 | All of them |
+| AI proposes → human confirms → executes | Rows 8, 22, 19 | All of them |
 | Audit trail per AI operation | Everyone | Everyone |
-| Entity resolution (codes → human-readable) | Naveen J, Ankit/Vishal | All of them |
-| Keyword fallback when OpenAI is unavailable | Jagan, Naveen J | All of them |
-| Session management | Jagan, Naveen J | All of them |
+| Entity resolution (codes → human-readable) | Rows 5, 19 | All of them |
+| Keyword fallback when OpenAI is unavailable | Rows 8, 5 | All of them |
+| Session management | Rows 8, 5 | All of them |
 
 The platform AI layer is not overhead. It is the difference between each team spending 60% of their time on infrastructure concerns and spending 100% of their time on the domain-specific problem they actually set out to solve.

@@ -7,7 +7,7 @@ Seven projects to complete the 4-layer architecture. Two are already running.
 ## [IN PROGRESS] Mini Project 1: EGOV RAG V5 — Layer 1 Knowledge
 **Repo:** `srujana-egov/EGOV_RAG_V5`  
 **Status:** Live. DIGIT Studio documentation chatbot.  
-**Team:** Srujana Dadi  
+**Owner:** Platform team  
 
 ### What Exists
 - Streamlit UI with cache → RAG → streaming answer pipeline
@@ -61,7 +61,7 @@ Each gets `/analyze`, `/recurrence`, `/severity`, alert engine, and an intellige
 An MCP server auto-generated from the 16 digit-specs OpenAPI 3.0.3 files. Any AI agent — Claude, GPT, the orchestrator, a custom pipeline — can call DIGIT APIs via this server.
 
 ### What It Is Not
-A hand-authored tool registry. The entire point is that DIGIT 3.0's specs are clean enough to generate from. Hand-authoring 61 tools (as Chakshu did for 2.9) was correct for 2.9. It is unnecessary on 3.0.
+A hand-authored tool registry. The entire point is that DIGIT 3.0's specs are clean enough to generate from. Hand-authoring 61 tools (as the 2.9 experiment did) was correct for 2.9. It is unnecessary on 3.0.
 
 ### Steps
 1. Run OpenAPI Generator against each spec file → raw MCP tool definitions

@@ -11,8 +11,8 @@ Audience: Principal architect of DIGIT.
 This repository documents the thinking, experiments, and architectural proposal behind making DIGIT AI-ready. It is not a critique of the platform. It is a study of what the platform already enables, what small additions would unlock significantly more AI capability, and what the AI layer itself needs to look like.
 
 Two internal experiments informed this:
-- **DIGIT MCP** (ChakshuGautam) — capability surface for DIGIT 2.9: what the platform can do, exposed as tools for AI agents
-- **digit-ai-orchestrator** (Srujana Dadi) — safety layer: what AI is allowed to do right now, based on deployment state
+- **DIGIT MCP** — capability surface for DIGIT 2.9: what the platform can do, exposed as tools for AI agents
+- **digit-ai-orchestrator** — safety layer: what AI is allowed to do right now, based on deployment state
 
 A third is underway:
 - **Smart Grievance Mapping** (intern project, due July 30) — the intelligence + application layers for PGR, proving a replicable pattern
@@ -26,17 +26,17 @@ These four pieces, studied together with DIGIT 3.0's actual capabilities, produc
 
 ## The Central Claim
 
-> DIGIT 3.0 already provides most of what Chakshu's 2.9 experiment needed to build. The remaining AI layer is thin, derivable, and almost entirely about the confirmation and intent translation boundary — not about compensating for platform gaps.
+> DIGIT 3.0 already provides most of what the 2.9 experiment needed to build. The remaining AI layer is thin, derivable, and almost entirely about the confirmation and intent translation boundary — not about compensating for platform gaps.
 
 Specifically:
 - 16 clean OpenAPI 3.0.3 specs → tool registry can be **seeded from generation, not hand-written** (reduces effort ~70%; encoding domain judgment on top still required)
-- `digit-cli` already ships → the "no CLI" gap is closed; Chakshu's registry-derived CLI is architecturally different (add one tool → CLI + MCP + tests auto-update) but not blocking
+- `digit-cli` already ships → the "no CLI" gap is closed; the registry-derived CLI from the 2.9 experiment is architecturally different (add one tool → CLI + MCP + tests auto-update) but not blocking
 - Workflow service exposes valid transitions via API → replaces hand-coded state gating for single-module operations; cross-module orchestration skills still needed
 - `digit-client` is a typed Java HTTP wrapper for microservices — not a semantic layer for AI consumption, and not intended to be
 
 What still needs building: an MCP server (generated from specs + progressive disclosure groups), entity resolution (wire the localization service, port `@digit-mcp/data-provider`), a confirmation middleware, and an intent classifier that covers all stakeholders.
 
-What Chakshu's 2.9 design got right that carries forward to 3.0: progressive disclosure, semantic layer, "tools encode judgment not just structure," the one-registry-every-interface principle, dual transport, and unit economics. See [09 — Comparison](docs/09-comparison-digit29-vs-digit30.md) for detail.
+What the 2.9 design got right that carries forward to 3.0: progressive disclosure, semantic layer, "tools encode judgment not just structure," the one-registry-every-interface principle, dual transport, and unit economics. See [09 — Comparison](docs/09-comparison-digit29-vs-digit30.md) for detail.
 
 ---
 
@@ -52,10 +52,10 @@ What Chakshu's 2.9 design got right that carries forward to 3.0: progressive dis
 | [06 — Mini Projects](docs/06-mini-projects.md) | 7 concrete projects to complete the architecture, 2 already running |
 | [07 — Security & Governance](docs/07-security-governance.md) | Every concern raised, with specific mitigations |
 | [08 — Roadmap](docs/08-roadmap.md) | Timeline, sequencing, dependencies |
-| [09 — Comparison: 2.9 vs 3.0](docs/09-comparison-digit29-vs-digit30.md) | Decision-by-decision: what 3.0 changes about Chakshu's approach, and what remains correct |
+| [09 — Comparison: 2.9 vs 3.0](docs/09-comparison-digit29-vs-digit30.md) | Decision-by-decision: what 3.0 changes about the 2.9 approach, and what remains correct |
 | [10 — Existing AI Initiatives](docs/10-existing-ai-initiatives.md) | 10 active eGov AI initiatives mapped to the 4-layer architecture, with the assumption each carries that may need revisiting |
 | [11 — Minimal AI Platform](docs/11-minimal-ai-platform.md) | If all specs were at the certificate service standard: exactly what artifacts remain, what is eliminated, and which 8 of 23 AoP projects are relevant |
-| [12 — Mini Projects Revised](docs/12-mini-projects-revised.md) | 7 concrete projects under the new architecture: spec gaps, exact interaction diagram template, MCP build steps, RAG adaptation, Temporal use cases and questions for Ghanshyam |
+| [12 — Mini Projects Revised](docs/12-mini-projects-revised.md) | 7 concrete projects under the new architecture: spec gaps, exact interaction diagram template, MCP build steps, RAG adaptation, Temporal use cases and open questions |
 | [13 — Two-Level Spec Architecture](docs/13-two-level-spec-architecture.md) | Platform services (digit-specs/v3.0.0) vs application services (license-certificate, PGR, TL): what each level needs, two types of interaction diagrams, how MCP spans both |
 
 ---

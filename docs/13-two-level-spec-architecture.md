@@ -1,6 +1,6 @@
 # Two-Level Spec Architecture: Platform Services vs Application Services
 
-The certificate service spec Ghanshyam provided as the quality standard is **not** a platform service. It is an **application** built on top of DIGIT's platform services. This distinction matters for every downstream decision: what gets rewritten, what gets improved, and what kind of interaction diagrams each level needs.
+The certificate service spec provided as the quality standard is **not** a platform service. It is an **application** built on top of DIGIT's platform services. This distinction matters for every downstream decision: what gets rewritten, what gets improved, and what kind of interaction diagrams each level needs.
 
 ---
 
@@ -13,7 +13,7 @@ Level 2 — Application Services
   Examples: Certificate, PGR, Trade License, BPA, Property Tax,
             Water & Sewerage, Fire NOC, Birth Registration
 
-  Quality standard: Certificate-3.0.0.yaml (Ghanshyam's reference)
+  Quality standard: Certificate-3.0.0.yaml
   Current state of old services: Swagger 2.0, RequestInfo wrappers,
                                   opaque codes — need full rewrite
 
@@ -233,6 +233,6 @@ state (unlock for state officials):
 | Interaction diagrams | Internal behavior diagrams | Cross-service orchestration diagrams |
 | Count (diagrams) | ~35-48 (~2-3 per service × 16) | ~28 (~4 per service × 7) |
 | MCP tools generated | Platform tools (workflow, individual, etc.) | Application tools (certificate, pgr, etc.) |
-| Owner | Platform team (Ghanshyam) | Platform team + service owners |
+| Owner | Platform team | Platform team + service owners |
 
-**The certificate service is the quality standard for Level 2. Ghanshyam's v3.0.0 platform specs are the quality standard for Level 1. These are different things.**
+**The certificate service is the quality standard for Level 2. The v3.0.0 platform specs define the standard for Level 1. These are different things.**

@@ -4,7 +4,7 @@ Four experiments inform this architecture. Each solved a real problem. Each reve
 
 ---
 
-## Experiment 1: DIGIT MCP (ChakshuGautam)
+## Experiment 1: DIGIT MCP
 **Context:** DIGIT 2.9. Built to make DIGIT AI-operable via the Model Context Protocol.
 
 ### What Was Built
@@ -24,7 +24,7 @@ Product/Module Layer
 DIGIT 2.9 Core
 ```
 
-Key design insight from Chakshu: *"Tool Registry is the main component. MCP is one caller. CLI is another. Tests are a third. No AI is required for the platform to work."*
+Key design insight: *"Tool Registry is the main component. MCP is one caller. CLI is another. Tests are a third. No AI is required for the platform to work."*
 
 ### What Was Verified (March 2026)
 - **61 tools** across 14 domain groups: core, docs, mdms, boundary, pgr, employees, admin, monitoring, tracing, encryption, localization, masters, idgen, location
@@ -67,7 +67,7 @@ Key design insight from Chakshu: *"Tool Registry is the main component. MCP is o
 
 ---
 
-## Experiment 2: digit-ai-orchestrator (Srujana Dadi)
+## Experiment 2: digit-ai-orchestrator
 **Context:** Built as a safety layer — what AI is allowed to do right now, based on deployment state.
 
 ### What Was Built
@@ -242,7 +242,7 @@ Full DIGIT documentation: API specs (the 16 digit-specs files), process guides, 
 
 | Question | Answer |
 |---|---|
-| Does DIGIT need a capability surface? | Yes. Chakshu proved this. |
+| Does DIGIT need a capability surface? | Yes. The DIGIT MCP experiment proved this. |
 | Does DIGIT need a safety layer? | Yes. The orchestrator proves this. |
 | Are they the same thing? | No. They compose. |
 | Does DIGIT need domain intelligence? | Yes. The intern project proves the pattern. |

@@ -12,7 +12,7 @@ There are **two levels of specs**, and they need different things. See [13 — T
 
 ### P1a — Platform Services: Improve (not rewrite)
 
-**Owner:** Platform team (Ghanshyam's team)  
+**Owner:** Platform team  
 **Effort:** ~1 week per service  
 **Services:** The 16 in `digitnxt/digit-specs/v3.0.0` — workflow, individual, boundary, idgen, mdms, localization, notification, filestore, account, accesscontrol, employee, billing-payment, otp, registry, url-shortener, common
 
@@ -78,7 +78,7 @@ These are Swagger 2.0 files. The gap is too large for incremental fixes. Full re
 
 **Owner:** Platform team  
 **Effort:** 2-3 days per service (after specs are done)  
-**Format:** websequencediagrams text source (same as Ghanshyam's format) — NOT PNG, NOT drawn
+**Format:** websequencediagrams text source (agreed format) — NOT PNG, NOT drawn
 
 Interaction diagrams are needed at **both levels**, but they answer different questions.
 
@@ -111,7 +111,7 @@ Not every operation. Only operations with non-trivial internal logic:
 
 **Question:** How does this application orchestrate platform services?
 
-These show how application services (certificate, PGR, trade license, etc.) call platform services in sequence. They live alongside the application spec. This is the diagram type Ghanshyam's websequencediagrams example showed.
+These show how application services (certificate, PGR, trade license, etc.) call platform services in sequence. They live alongside the application spec. This is the diagram type shown in the reference example.
 
 Not every endpoint. Only operations with cross-service calls:
 
@@ -353,7 +353,7 @@ RAG V5 handles the "how do I" questions. MCP handles the "do this" commands. A t
 
 ---
 
-## 6. Temporal — Use Case and What to Ask Ghanshyam
+## 6. Temporal — Use Case and Open Questions
 
 ### What Temporal is
 
@@ -409,16 +409,16 @@ class StartBusinessWorkflow:
 
 If the Fire NOC activity fails halfway, Temporal automatically retries it. If it permanently fails, it runs the compensation (cancel Trade License + Water Connection that already succeeded).
 
-### What to ask Ghanshyam
+### Open questions for the architecture review
 
 1. **Infrastructure:** Is Temporal already deployed in DIGIT's infrastructure, or does it need to be set up? Self-hosted Temporal or Temporal Cloud?
 2. **Confirmation gate placement:** Should the human YES/NO confirmation sit inside the Temporal workflow (as a human-in-the-loop activity) or outside it (before the workflow is triggered)? This affects the UX significantly.
 3. **Priority workflow:** Of the 5 cross-module workflows, which should be built first? "Start a business" is the most visible. "Commissioner's brief" is read-only and safest to start with.
-4. **Row 20 in AoP (Vinoth — PGR integration with Temporal):** This is currently scoped to PGR only. Should it be expanded to be the general Temporal setup for all 5 workflows? Vinoth's work is the foundation — scope expansion now saves rebuilding later.
+4. **Row 20 in AoP (PGR integration with Temporal):** This is currently scoped to PGR only. Should it be expanded to be the general Temporal setup for all 5 workflows? This existing work is the foundation — scope expansion now saves rebuilding later.
 
 ---
 
-## 7. Are Ghanshyam's Specs Responses Human-Readable? Is Semantic Layer Still Needed?
+## 7. Are the Certificate-Standard Responses Human-Readable? Is Semantic Layer Still Needed?
 
 ### What the current specs return (example — pgr.yml search response)
 
@@ -456,7 +456,7 @@ All primary fields are human-readable. What's still opaque:
 
 **No — for two reasons:**
 
-**Reason 1: Response enrichment** (cleanest — Ghanshyam should decide this)  
+**Reason 1: Response enrichment** (cleanest — platform team decision)  
 Embed the resolved entity inline in the response:
 ```json
 {
@@ -494,7 +494,7 @@ The remaining cross-entity needs are handled by either response enrichment (plat
 | P3 | MCP server (auto-generate from specs — both levels) | AI Execution | AI team, 1 developer | 2 weeks | P1a, P1b |
 | P4 | Confirmation gate | AI Execution | AI team, 1 developer | 1 week | P3 |
 | P5 | Audit log writer | AI Execution | AI team, 1 developer | 3 days | P3 |
-| P6 | RAG V5 — endpoint-aware chunking + spec ingestion | AI Execution | AI team (Srujana) | 1-2 weeks | P1a, P1b, P2a, P2b |
+| P6 | RAG V5 — endpoint-aware chunking + spec ingestion | AI Execution | Platform team | 1-2 weeks | P1a, P1b, P2a, P2b |
 | P7 | Temporal setup + 5 cross-module workflows | AI Execution | AI team, 1-2 developers | 4-6 weeks | P1b, P3 |
 
 **What's eliminated vs the original mini project list:**
