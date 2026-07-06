@@ -131,11 +131,11 @@ DIGIT 3.0's 16 OpenAPI specs are clean enough to seed a tool registry from. They
 |---|---|---|
 | Platform doesn't enforce process order | Skills guide AI through multi-step sequences | Workflow service exposes valid transitions |
 
-**What changes:** DIGIT 3.0's workflow service answers "what transitions are valid from the current state of this entity?" An AI can query the platform instead of following a skill's prescribed path. For workflow-managed operations, the platform IS the process enforcer.
+**What changes:** DIGIT 3.0's workflow service answers "what transitions are valid from the current state of this entity?" An AI can query the platform instead of reasoning about valid next steps from scratch. This constrains the option set — the AI picks from valid transitions, not from all possible API calls.
 
-**What doesn't change:** Skills for cross-service orchestration (start a business: Trade License + Fire NOC + Water in parallel) are not workflow-managed. These genuinely require skills or equivalent reasoning guidance. The platform can't tell an AI how to orchestrate across three separate module workflows.
+**What doesn't change:** The workflow service tells you what's *valid*. It doesn't tell you what's *wise*. `PENDING_VERIFICATION → [APPROVE, REJECT, REQUEST_MORE_INFO]` — all three are valid; choosing correctly still requires reasoning. More importantly: setup operations (city onboarding, workflow definition, idgen, boundary setup) have no workflow entity — there's nothing for the service to query. Cross-module operations (Trade License + Fire NOC + Water Connection in parallel, Revenue recovery across PT + W&S, Commissioner's brief across four modules) span separate workflows the platform doesn't coordinate. Skills for these cases are still needed.
 
-**Verdict:** 3.0 replaces skills for single-module sequential operations. Skills still needed for cross-module orchestration. Chakshu's use case examples (Revenue recovery, Commissioner's brief, Post-disaster triage) all span multiple modules — these still need skills.
+**Verdict:** 3.0 reduces skill authoring for single-entity, single-module workflow progression. It does not eliminate skills. Chakshu's strongest use cases (Revenue recovery, Commissioner's brief, Start a business) all cross module boundaries — the workflow service doesn't touch them.
 
 ---
 

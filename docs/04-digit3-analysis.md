@@ -101,7 +101,7 @@ No custom state-gating code needed for workflow-managed operations.
 | CLI (auto-generated from registry) | No command-line access to the platform | **Partially addressed.** digit-cli exists. But it's separately maintained — not derived from the same registry as MCP tools. |
 | Progressive disclosure (8 tools → unlock) | 61 tools in context degrades AI accuracy | **Not addressed by 3.0.** Still required regardless of how clean the specs are. |
 | Tool Registry (61 tools, hand-authored) | 2.9 APIs not self-describing | **Reduced effort.** 16 clean OpenAPI specs → generate a baseline. Judgment encoding on top still needed (~30% of original effort). |
-| Skills (multi-step guidance) | Platform didn't enforce process order; developer productivity | **Partially replaced.** Workflow service handles single-module process order. Cross-module orchestration skills (Revenue recovery, Commissioner's brief, Triage across modules) are still needed. Developer productivity skills (`create_digit_ui`, `create_chart`, `debug`) are still valid. |
+| Skills (multi-step guidance) | Platform didn't enforce process order; developer productivity | **Partially reduced.** Workflow service constrains valid transitions for a single entity in a single workflow — the AI queries the platform instead of reasoning from scratch. It does not replace skills for: setup sequencing (no workflow entity exists during city onboarding), cross-module orchestration (Trade License + Fire NOC + Water have separate processes the platform doesn't coordinate), choosing *which* valid transition is wise vs merely valid, and developer productivity skills (`create_digit_ui`, `create_chart`, `debug`). |
 | Semantic Layer (code resolution) | Internal codes not human-readable | **Not addressed.** Localization service exists but not wired for AI consumption. Gap unchanged. |
 | MCP transport | No AI agent entry point | **Needs building.** Thin, generated from specs. Not hand-authored. |
 | Product/Module Layer | Context per DIGIT module | **In specs.** Each service spec provides sufficient context. |
@@ -140,7 +140,7 @@ The difference from 2.9 is magnitude, not kind. The work is lighter because the 
 ### Does Not Need Building
 - A replacement for digit-client (correct for its purpose; AI needs MCP, not Java)
 - A completely new CLI if digit-cli is sufficient for the audience (though the registry-derived CLI architecture is worth adopting long-term)
-- Skills for single-module sequential workflow operations (the platform handles these)
+- Skills for single-entity, single-module workflow progression (workflow service constrains valid transitions — the AI queries the platform instead of reasoning about it)
 
 ### Decision Points for the Platform Team
 - **CLI architecture:** Adopt registry-derived CLI (add tool once → CLI + MCP + tests), or maintain digit-cli as a separate codebase alongside the MCP tool registry?
