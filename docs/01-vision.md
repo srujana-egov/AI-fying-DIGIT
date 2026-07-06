@@ -6,7 +6,9 @@ DIGIT 3.0 already exists. Sixteen platform services. Eighteen domain products. J
 
 The missing piece is not more platform. The missing piece is that no LLM can currently operate it.
 
-Give Claude access to DIGIT today and it reads YAML files, reasons about what the API probably does, and writes HTTP calls that may or may not match the real schema. There is no structured execution surface. There is no auth propagation. There is no confirmation before a write. There is no audit trail.
+Give Claude the DIGIT codebase today. It can read it and explain it. It cannot call any live API. It cannot authenticate as a user. It cannot confirm before making a change. It cannot log what it did.
+
+Reading about DIGIT is not operating DIGIT.
 
 That is the gap this proposal closes.
 
