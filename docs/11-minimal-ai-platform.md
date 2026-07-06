@@ -219,7 +219,7 @@ This is the only place where "AI proposes, human confirms, AI executes" happens.
 
 The interaction diagrams handle single-service understanding. For operations that span multiple services, a workflow definition is still needed. These are authored once and don't change often.
 
-The five that matter — not an exhaustive list, but five representative shapes of cross-module orchestration (saga rollback, durable bulk job, read-then-act, prioritize-and-dispatch, pure aggregate read). Covering these five is enough to prove the pattern handles the categories of cross-module work DIGIT needs:
+The five that matter — not an exhaustive list, but five representative shapes of cross-module orchestration (saga rollback, durable bulk job, read-then-act, prioritize-and-dispatch, pure aggregate read). Covering these five is enough to prove the pattern handles the categories of cross-module work DIGIT needs. They are not invented for this proposal — they are the same use cases the DIGIT MCP experiment (`digitnxt/digit-mcp`, built for 2.9) was already built and validated around, carried forward here rather than picked from scratch.
 
 | Workflow | Services spanned |
 |---|---|

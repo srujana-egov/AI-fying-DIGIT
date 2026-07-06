@@ -40,7 +40,6 @@ What still needs building: specs at the right standard (two levels — see doc 1
 |---|---|
 | [01 — Vision](docs/01-vision.md) | The end state: what AI-fying DIGIT makes possible for city administrators, state officials, and field workers |
 | [02 — Stakeholders](docs/02-stakeholders.md) | Who interacts with DIGIT at the platform level, what AI genuinely adds for each, and why developers and one-time city setup are out of scope |
-| [03 — Existing Experiments](docs/03-existing-experiments.md) | DIGIT MCP, orchestrator, RAG V5, intern projects — what was built and what was learned |
 | [07 — Security & Governance](docs/07-security-governance.md) | Every concern raised, with specific mitigations |
 | [11 — Minimal AI Platform](docs/11-minimal-ai-platform.md) | **The architecture**: with specs at the certificate standard, exactly what artifacts remain and what is eliminated |
 | [12 — Mini Projects](docs/12-mini-projects-revised.md) | The 9 concrete projects: two spec tracks, two diagram tracks, MCP, confirmation gate, audit log, RAG adaptation, Temporal workflows |
