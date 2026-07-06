@@ -123,7 +123,7 @@ Kong is the existing API gateway in `digitnxt/digit3`. The core requirements are
 **What still needs doing:**
 - Register MCP server, RAG V5, and Temporal as protected services in Kong's `setup.py` (same pattern as workflow, boundary, idgen)
 - Add per-tenant, per-agent rate limiting — AI agents call at machine speed; existing limits are designed for human-paced interaction
-- Confirm OTP endpoint whitelist behaviour (currently gets JWT + RBAC applied — may need to be whitelisted for unauthenticated OTP flows)
+- Confirm OTP endpoint whitelist behaviour (currently gets JWT + RBAC applied — may need to be whitelisted for unauthenticated OTP flows). This is not a minor detail: it is the prerequisite for any non-console channel to authenticate at all. A console user already has a browser session with Keycloak; a WhatsApp bot user has no equivalent login screen. The only way that user gets a real Keycloak-issued JWT is by proving identity through OTP against a whitelisted, unauthenticated endpoint — the same category of exception `/accounts` and `/keycloak` already are. Without this confirmed working, a WhatsApp-based consumer cannot reach MCP with a valid Bearer token, full stop.
 
 ---
 
@@ -243,7 +243,7 @@ Two distinct interaction modes. The diagram shows both.
                         INTERACTIVE  (user-initiated)                 SCHEDULED  (cron-triggered)
 ┌──────────────────────────────────────────────────────────────────┐ ┌─────────────────────────────┐
 │  Any consumer: city admin · state official · AI agent ·          │ │  Temporal                     │
-│  HCM console · PGR copilot · WhatsApp bot                        │ │  cross-module orchestration  │
+│  HCM console · PGR copilot · WhatsApp bot*                       │ │  cross-module orchestration  │
 └──────────────────────────┬───────────────────────────────────────┘ │  5 workflows · saga           │
                            │                                          │  sequences steps; each write  │
               ┌────────────▼────────────┐                            │  is one MCP tool call         │
@@ -332,6 +332,8 @@ Two distinct interaction modes. The diagram shows both.
 ```
 
 No semantic layer. No tool registry. No custom intent classifier. No skills for single-service operations.
+
+*\* WhatsApp bot cannot present a JWT to Kong the way a console user can — there is no browser session with Keycloak behind it. It needs the OTP whitelist item (Gateway section above) confirmed working: OTP against a whitelisted, unauthenticated endpoint is the only way this channel gets a real Keycloak-issued Bearer token. Until that is confirmed, this box is aspirational, not available.*
 
 **Note: "HCM console" in the consumer row is not the console's existing traffic.** A user clicking a button in the console today calls the application service directly — that path is unchanged and never touches Kong's AI routes. "HCM console" in the diagram means an AI copilot embedded inside the console (a chat panel) that, when used, calls the MCP server like any other consumer — same Kong, same auth, same application services, reached by natural language instead of a click. The confirmation gate's output (see Confirmation gate above) does not have to be a chat bubble — it can render as a native card inside the console UI.
 

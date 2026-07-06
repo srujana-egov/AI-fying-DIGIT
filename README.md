@@ -46,6 +46,7 @@ What still needs building: specs at the right standard (two levels — see doc 1
 | [12 — Mini Projects](docs/12-mini-projects-revised.md) | The 9 concrete projects: two spec tracks, two diagram tracks, MCP, confirmation gate, audit log, RAG adaptation, Temporal workflows |
 | [13 — Two-Level Spec Architecture](docs/13-two-level-spec-architecture.md) | Platform specs vs application specs: what each level needs, two types of interaction diagrams, how MCP spans both |
 | [14 — AI Patterns Across DIGIT Products](docs/14-ai-patterns-across-digit-products.md) | 5 generalizable patterns (flagging, GIS cross-reference, proactive alerting, deduplication, process intelligence) mapped across all 18 eGov domain products |
+| [15 — Request Walkthroughs](docs/15-request-walkthroughs.md) | Two step-by-step traces through the architecture: an interactive write (trade license application) and a scheduled cross-module job (revenue recovery on Temporal) |
 
 ---
 
