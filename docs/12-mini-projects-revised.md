@@ -258,6 +258,8 @@ Step 2 (2-3 days): Generate tool definitions from specs
   → Produces typed HTTP client per service
 
 Step 3 (2 days): Wrap generated clients as MCP tools
+  // Kong (digit3) has already validated the JWT before this request
+  // arrives. MCP just forwards the Authorization header it receives.
   for each generated operation:
     server.tool(
       operationId,           // from spec
@@ -266,7 +268,7 @@ Step 3 (2 days): Wrap generated clients as MCP tools
       async (params, ctx) => {
         return await {service}Client.{operation}(
           params,
-          { Authorization: `Bearer ${ctx.bearerToken}` }
+          { Authorization: ctx.headers['authorization'] } // forward, don't re-validate
         )
       }
     )
@@ -342,9 +344,9 @@ If MCP is replaced by a future standard (Google/Microsoft A2A protocol, an OpenA
 
 ---
 
-## 4. Is EGOV RAG V5 Good Enough for Specs + Interaction Diagrams?
+## 4. RAG V5 — Retrieval Architecture Unchanged, Ingestion Pipeline Needs Building
 
-**Short answer: RAG V5 works for its current purpose. It needs adaptation for specs. For AI agent operation, you don't need RAG at all.**
+**The retrieval architecture (hybrid vector + BM25 + Reciprocal Rank Fusion) is untouched. What needs building is the ingestion pipeline for specs and interaction diagrams.**
 
 ### Why standard RAG doesn't work well for OpenAPI specs
 
@@ -495,7 +497,7 @@ def hybrid_retrieve_pg(query, top_k=10, section_hint=None, service=None, chunk_t
 
 ---
 
-## 5. P4 — Confirmation Gate
+## 5. P4 — Confirmation Gate *(component inside the MCP server, not a separate service)*
 
 **~100-150 lines. Redis-backed. Intercepts all write operations before execution.**
 
@@ -607,7 +609,7 @@ async def tool_handler(operation_id: str, params: dict, ctx):
 
 ---
 
-## 5b. P5 — Audit Log Writer
+## 5b. P5 — Audit Log Writer *(component inside the MCP server, not a separate service)*
 
 **~30 lines of implementation code. PostgreSQL-backed. Written after every confirmed write.**
 
@@ -710,6 +712,19 @@ async def execute_and_audit(pending: dict, ctx, http_client):
 ---
 
 ## 6. Temporal — Use Case and Open Questions
+
+### How n8n calls DIGIT
+
+n8n HTTP Request nodes call DIGIT APIs **directly** — not via the MCP server. Each node carries the user's Bearer token (passed from the workflow trigger) in the Authorization header. Kong validates the JWT before the request reaches any DIGIT service, the same way it does for MCP. The confirmation gate is not involved mid-workflow — the user confirms the whole workflow at entry, not each individual API call.
+
+```
+User triggers workflow (confirms at entry)
+  → n8n HTTP Request node
+    → Authorization: Bearer {user_jwt}   ← Kong validates this
+    → POST /certificate-types/trade-license/certificates
+    → DIGIT API responds
+  → n8n next node (Fire NOC, Water, etc. in parallel)
+```
 
 ### What Temporal is
 
@@ -881,8 +896,8 @@ The remaining cross-entity needs are handled by either response enrichment (plat
 | P2a | Platform internal diagrams (~35-48 total, ~2-3 per service) | Platform | Platform team | 1-2 days/service | MCP quality, RAG quality |
 | P2b | Application cross-service diagrams (~28 total, ~4 per service) | Application | Platform team | 2-3 days/service | MCP quality, RAG quality |
 | P3 | MCP server (auto-generate from specs — both levels) | AI Execution | Platform team, 1 developer | 2 weeks | P1a, P1b |
-| P4 | Confirmation gate | AI Execution | Platform team, 1 developer | 3-4 days | P3 |
-| P5 | Audit log writer | AI Execution | Platform team, 1 developer | 2-3 days | P3 |
+| P4 | Confirmation gate *(inside MCP server — not a separate service)* | AI Execution | Platform team, 1 developer | 3-4 days | P3 |
+| P5 | Audit log writer *(inside MCP server — not a separate service)* | AI Execution | Platform team, 1 developer | 2-3 days | P3 |
 | P6 | RAG V5 — endpoint-aware chunking + spec ingestion | AI Execution | Platform team, 1 developer | 1-2 weeks | P1a, P1b, P2a, P2b |
 | P7 | 5 cross-module workflows (n8n first, Temporal for Start a Business) | AI Execution | Platform team, 1-2 developers | 3-4 weeks | P1b, P3 |
 
