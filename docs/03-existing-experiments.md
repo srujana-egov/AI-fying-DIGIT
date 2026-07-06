@@ -241,7 +241,7 @@ Admin dashboard: query history, satisfaction rate, Q&A cache management, content
 DIGIT Studio documentation: `studio_chunks.jsonl`, `normalized_chunks.jsonl`, `pitch_deck_chunks.jsonl`
 
 ### What It Needs to Know
-Full DIGIT documentation: API specs (the 16 digit-specs files), process guides, MDMS configuration references, workflow design patterns, case studies from deployed cities.
+Interaction diagrams (from P2a and P2b), process guides, MDMS configuration references, workflow design patterns, case studies from deployed cities. API specs go into the MCP server via openapi-generator — not into RAG.
 
 ### What It Reveals
 1. **The feedback loop is the most important feature.** Repeated 👍 promotes answers to cache. The bot gets smarter on the questions real users actually ask. Predetermined Q&A cache means high-frequency questions cost zero API calls.
@@ -340,7 +340,7 @@ Secondary: MOSIP deduplication engine integration for robust identity
 | Does DIGIT need a safety layer? | Yes. The orchestrator proves this. |
 | Are they the same thing? | No. They compose. |
 | Does DIGIT need domain intelligence? | Yes. The PGR intern project proves the flagging pattern. |
-| Does DIGIT need a knowledge layer? | Yes. RAG V5 proves the architecture. |
+| Does DIGIT need a documentation Q&A layer? | Yes. RAG V5 proves the architecture — for "how do I" questions, not API execution. |
 | Does GIS cross-reference work at country scale? | Yes. HCM population denominator project proves it — WorldPop + Google Open Buildings vs HCM enrollment at country level in LMICs. |
 | Does deduplication need to be on-device? | Yes, for field conditions. HCM dedup project proves on-device fuzzy matching before submission is the right point of intervention. Offline-capable. Published as reusable Flutter library. |
 | Does AI flagging generalize beyond PGR? | Yes — same pattern across all 20 eGov products. See doc 14. |

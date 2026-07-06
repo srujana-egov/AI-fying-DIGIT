@@ -307,7 +307,7 @@ The pattern across all relevant AoP initiatives: each team is solving a real dom
 
 | # | Initiative | Role in architecture | Direction |
 |---|---|---|---|
-| 2 | LLM guidance chatbot | RAG V5 | Keep. Expand knowledge base to include all specs + interaction diagrams. |
+| 2 | LLM guidance chatbot | RAG V5 | Keep. Expand knowledge base to include interaction diagrams and process guides. Specs go into the MCP server, not RAG. |
 | 5 | MCP for DIGIT PGR | MCP Server | Generalize. Don't build PGR-specific — build the generator that produces MCP from any spec. PGR is the first test case, not the final scope. |
 | 8 | Service Config AI Agent | Limited — see note | Reframe. Configuration is one-time per city (not at-scale) and tenant isolation prevents cross-city template borrowing. The confirmation gate is still needed — but for operational write operations (transition approvals, batch renewals), not configuration. |
 | 13 | Console config chatbot | RAG V5 + MCP Server | Don't build RAG for config generation — RAG answers questions, it can't execute. Wire RAG V5 (questions) + confirmation gate (actions) with a thin intent router between them. |

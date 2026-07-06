@@ -344,29 +344,9 @@ If MCP is replaced by a future standard (Google/Microsoft A2A protocol, an OpenA
 
 ---
 
-## 4. RAG V5 — Retrieval Architecture Unchanged, Ingestion Pipeline Needs Building
+## 4. RAG V5 — Retrieval Architecture Unchanged, Diagram Ingestion Needed
 
-**The retrieval architecture (hybrid vector + BM25 + Reciprocal Rank Fusion) is untouched. What needs building is the ingestion pipeline for specs and interaction diagrams.**
-
-### Why standard RAG doesn't work well for OpenAPI specs
-
-RAG V5 chunks documents by paragraph/character count. An OpenAPI spec doesn't chunk that way — one endpoint's definition spans 50-200 lines of YAML and must stay together to be meaningful. If a chunk breaks mid-schema, the retrieved chunk is useless.
-
-```
-What RAG V5 does:
-  spec YAML (2000 lines)
-    → chunk by ~500 chars
-    → chunk 3 contains half of requestBody schema
-    → chunk 4 contains the other half + response schema
-    → neither chunk is useful alone
-
-What specs need:
-  spec YAML (2000 lines)
-    → chunk by operationId (keep each endpoint together)
-    → chunk = {operationId, summary, description, parameters, 
-               requestBody, responses, examples}
-    → each chunk is self-contained and meaningful
-```
+**The retrieval architecture (hybrid vector + BM25 + Reciprocal Rank Fusion) is untouched. Specs do not go into RAG — they go into the MCP server via openapi-generator. What RAG needs is the interaction diagrams.**
 
 ### For AI agent operation — RAG not needed at all
 
@@ -383,83 +363,17 @@ When the AI agent uses MCP tools, it doesn't need to search the specs. The MCP s
 
 RAG V5 handles the "how do I" questions. MCP handles the "do this" commands. A thin router between them (is this a question or a command?) connects the two.
 
-### What needs changing in RAG V5 for specs + diagrams
+### What needs building in RAG V5
 
 **Current state of the actual repo** (`srujana-egov/EGOV_RAG_V5`):
-- Chunking is entirely manual. Developers hand-write chunk text as Python dicts or JSONL files. There is no automatic chunker or YAML parser.
-- Schema: `id`, `document`, `embedding`, `section` (one of: FAQ, User Stories, Architecture, Overview, General). No `service`, `operationId`, `method`, or `path` fields exist.
-- Corpus: DIGIT Studio docs only (`studio_chunks.jsonl`, `normalized_chunks.jsonl`). No API spec content.
-- Retrieval: hybrid vector + BM25 via RRF, with section-hint keyword filter. No metadata filtering beyond `section`.
-- No retrieval API — `retrieval.py` is imported directly by `app.py` (Streamlit).
+- Chunking is entirely manual. Developers hand-write chunk text as Python dicts or JSONL files.
+- Schema: `id`, `document`, `embedding`, `section` (one of: FAQ, User Stories, Architecture, Overview, General).
+- Corpus: DIGIT Studio docs only (`studio_chunks.jsonl`, `normalized_chunks.jsonl`). No interaction diagram content.
+- Retrieval: hybrid vector + BM25 via RRF, with section-hint keyword filter.
 
-**Step 1 — Extend the database schema** (1 day):
-```sql
--- Add metadata columns to the existing table
-ALTER TABLE studio_manual ADD COLUMN service TEXT;
-ALTER TABLE studio_manual ADD COLUMN operation_id TEXT;
-ALTER TABLE studio_manual ADD COLUMN http_method TEXT;
-ALTER TABLE studio_manual ADD COLUMN api_path TEXT;
-ALTER TABLE studio_manual ADD COLUMN chunk_type TEXT DEFAULT 'doc';
-  -- chunk_type: 'doc' (existing), 'spec', 'interaction_diagram'
+Specs go into the MCP server, not RAG. What RAG needs is interaction diagrams — so implementation teams can ask "what's the sequence for applying for a certificate?" and get the right answer.
 
-CREATE INDEX studio_manual_service ON studio_manual (service);
-CREATE INDEX studio_manual_operation_id ON studio_manual (operation_id);
-CREATE INDEX studio_manual_chunk_type ON studio_manual (chunk_type);
-```
-
-**Step 2 — Write the spec chunker** (`ingest_specs.py`, ~80 lines):
-```python
-import yaml, json
-from pathlib import Path
-from openai import OpenAI
-
-client = OpenAI()
-
-def chunk_openapi_spec(spec_path: Path, service_name: str) -> list[dict]:
-    spec = yaml.safe_load(spec_path.read_text())
-    chunks = []
-    
-    for path, path_item in spec.get('paths', {}).items():
-        for method, operation in path_item.items():
-            if method not in ('get', 'post', 'put', 'patch', 'delete'):
-                continue
-            
-            operation_id = operation.get('operationId', f'{method}_{path}')
-            summary = operation.get('summary', '')
-            description = operation.get('description', '')
-            parameters = yaml.dump(operation.get('parameters', []), default_flow_style=True)
-            request_body = yaml.dump(operation.get('requestBody', {}), default_flow_style=True)
-            responses = yaml.dump(operation.get('responses', {}), default_flow_style=True)
-            tags = operation.get('tags', [])
-            
-            chunk_text = f"""Service: {service_name}
-Operation: {operation_id} ({method.upper()} {path})
-Summary: {summary}
-Description: {description}
-Parameters: {parameters}
-Request body: {request_body}
-Responses: {responses}""".strip()
-            
-            chunks.append({
-                'id': f'spec/{service_name}/{operation_id}',
-                'document': chunk_text,
-                'section': 'API Spec',
-                'service': service_name,
-                'operation_id': operation_id,
-                'http_method': method.upper(),
-                'api_path': path,
-                'chunk_type': 'spec'
-            })
-    
-    return chunks
-
-# Run against all specs:
-for spec_file in Path('digit-specs/v3.0.0').glob('*.yaml'):
-    chunks = chunk_openapi_spec(spec_file, spec_file.stem)
-    embed_and_upsert(chunks)  # same pattern as existing ingest_new_chunks.py
-```
-
-**Step 3 — Write the diagram ingester** (`ingest_diagrams.py`, ~20 lines):
+**Step 1 — Write the diagram ingester** (`ingest_diagrams.py`, ~20 lines):
 Each interaction diagram file becomes one chunk. Diagrams are short enough to stay whole.
 
 ```python
@@ -471,29 +385,12 @@ def ingest_diagram(diagram_path: Path, service: str, operation_id: str):
         'section': 'Architecture',
         'service': service,
         'operation_id': operation_id,
-        'chunk_type': 'interaction_diagram'
     }
 ```
 
-**Step 4 — Update retrieval.py to support metadata filters** (~15 new lines):
-```python
-# In hybrid_retrieve_pg(), add optional filters:
-def hybrid_retrieve_pg(query, top_k=10, section_hint=None, service=None, chunk_type=None):
-    where_clauses = ["1=1"]
-    if section_hint:
-        where_clauses.append(f"section ILIKE '%{section_hint}%'")
-    if service:
-        where_clauses.append(f"service = '{service}'")
-    if chunk_type:
-        where_clauses.append(f"chunk_type = '{chunk_type}'")
-    # rest of existing logic unchanged
-```
+**Step 2 — Test retrieval** (1 day): Query "what happens when workflow transition fails" → verify it retrieves the correct diagram. Add process guides and MDMS config references as further corpus expansion.
 
-**Step 5 — Re-ingest all specs** (1 day): Run `ingest_specs.py` against all 16 platform specs (from `digit-specs/v3.0.0`) and all available application specs. As P1b progresses, add each new spec to the pipeline.
-
-**Step 6 — Test retrieval** (1 day): Query "how to apply for trade license" → verify it retrieves the certificate application operation chunk. Query "what happens when workflow transition fails" → verify it retrieves the workflow internal behavior diagram.
-
-**Effort:** 1-2 weeks total. Main work is the spec chunker (Step 2) and retrieval testing (Step 6). The schema extension and diagram ingester are straightforward.
+**Effort:** 3-5 days. The diagram ingester is straightforward. Most time is testing retrieval quality.
 
 ---
 
@@ -898,7 +795,7 @@ The remaining cross-entity needs are handled by either response enrichment (plat
 | P3 | MCP server (auto-generate from specs — both levels) | AI Execution | Platform team, 1 developer | 2 weeks | P1a, P1b |
 | P4 | Confirmation gate *(inside MCP server — not a separate service)* | AI Execution | Platform team, 1 developer | 3-4 days | P3 |
 | P5 | Audit log writer *(inside MCP server — not a separate service)* | AI Execution | Platform team, 1 developer | 2-3 days | P3 |
-| P6 | RAG V5 — endpoint-aware chunking + spec ingestion | AI Execution | Platform team, 1 developer | 1-2 weeks | P1a, P1b, P2a, P2b |
+| P6 | RAG V5 — diagram ingestion (specs go into MCP, not RAG) | AI Execution | Platform team, 1 developer | 3-5 days | P2a, P2b |
 | P7 | 5 cross-module workflows (n8n first, Temporal for Start a Business) | AI Execution | Platform team, 1-2 developers | 3-4 weeks | P1b, P3 |
 
 **What's eliminated vs the original mini project list:**
@@ -910,4 +807,4 @@ The remaining cross-entity needs are handled by either response enrichment (plat
 **What's new vs the original list:**
 - Interaction diagrams (P2) → added, owned by platform team
 - Temporal (P7) → replaces vague "cross-module orchestration" with a specific engine
-- RAG adaptation (P6) → added, endpoint-aware chunking for specs
+- RAG adaptation (P6) → diagram ingestion only; specs go into MCP server via openapi-generator, not RAG
