@@ -32,7 +32,7 @@ Citizens never interact with DIGIT directly. They interact with apps. Whether th
 - Currently: digit-specs (16 OpenAPI files), digit-client (Java), digit-cli, documentation
 
 **What AI adds:**
-- Documentation Q&A via RAG: "what fields are required for workflow creation?", "what's the correct order for city setup?" — Layer 1, not execution
+- Documentation Q&A via RAG V5: "what fields are required for workflow creation?", "what's the correct order for city setup?"
 - Spec exploration and test case generation in developer/sandbox environments
 
 **What AI does NOT add here:**
@@ -42,7 +42,7 @@ Citizens never interact with DIGIT directly. They interact with apps. Whether th
 
 **Risk tolerance:** N/A for production writes — AI-assisted production configuration is out of scope. Developer environments: high (sandboxed).
 
-**Where AI genuinely helps this group:** Layer 1 — documentation and spec Q&A. Not Layer 2 execution on production systems.
+**Where AI genuinely helps this group:** Documentation and spec Q&A (RAG V5). Not execution on production systems.
 
 ---
 
@@ -58,6 +58,7 @@ Citizens never interact with DIGIT directly. They interact with apps. Whether th
 - Natural language queries over live DIGIT data
 - Cross-domain synthesis (PGR + HCM + Finance in one answer)
 - Proactive alerts before they ask
+- Revenue intelligence: flagged records surfaced for action — trade licenses where GIS shows commercial use but declaration says residential, property tax records where satellite area exceeds declared area. The commissioner's revenue team queries flagged records and acts. The AI does the cross-referencing; the human makes the decision.
 
 **Risk tolerance:** High for reads. Low for writes. A commissioner query that returns wrong data is bad. An AI-initiated state change in government records without confirmation is unacceptable.
 
@@ -103,9 +104,9 @@ Citizens never interact with DIGIT directly. They interact with apps. Whether th
 **Who:** Claude, GPT-4, custom orchestrators, automated pipelines — acting on behalf of any of the above stakeholders.
 
 **What they need:**
-- A structured, well-documented tool surface (MCP server)
+- A structured, well-documented tool surface (MCP server auto-generated from specs)
 - Platform-level knowledge of what operations are valid in the current state
-- Entity resolution: receive human-readable values, not internal codes
+- Human-readable values in API responses — not internal codes (handled by certificate-standard specs, not a separate resolution layer)
 - Confirmation before executing write operations
 
 **Risk tolerance:** The AI agent itself has no risk tolerance — it's a tool. The risk tolerance is the stakeholder's. The platform enforces it via the confirmation layer.
@@ -116,10 +117,10 @@ Citizens never interact with DIGIT directly. They interact with apps. Whether th
 
 | Stakeholder | Read ops | Write ops | Confirmation needed | AI value |
 |---|---|---|---|---|
-| Implementation teams | Low risk | Out of scope (production) | N/A | Layer 1 only — documentation Q&A, sandbox exploration |
-| City administrators | Low risk | High risk | Yes, mandatory | Layer 2 + Layer 3 — operational intelligence, cross-domain synthesis |
-| State officials | Low risk | None needed | N/A | Layer 2 + Layer 3 — cross-city intelligence, anomaly detection |
-| Developers | Low risk | Low risk (dev env) | Recommended | Layer 1 — spec exploration, code generation |
-| AI agents | Inherited from caller | Inherited from caller | Always | All layers — executes on behalf of above stakeholders |
+| Implementation teams | Low risk | Out of scope (production) | N/A | RAG V5 — documentation Q&A, sandbox exploration only |
+| City administrators | Low risk | High risk | Yes, mandatory | MCP queries + flagging — revenue intelligence, cross-domain synthesis, proactive alerts |
+| State officials | Low risk | None needed | N/A | MCP queries — cross-city intelligence, anomaly detection |
+| Developers | Low risk | Low risk (dev env) | Recommended | RAG V5 — spec exploration, code generation |
+| AI agents | Inherited from caller | Inherited from caller | Always | MCP server — executes on behalf of above stakeholders via confirmation gate |
 
 The AI layer must propagate the authenticated user's identity to DIGIT's APIs. The AI never holds a service account with elevated permissions. DIGIT's own RBAC is the enforcement mechanism — the AI layer must not bypass it.
