@@ -234,46 +234,64 @@ The five that matter:
 
 ## The Complete Architecture
 
+Two distinct interaction modes. The diagram shows both.
+
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│  Any consumer: city admin, state official, implementation team, │
-│  AI agent, HCM console, PGR copilot, WhatsApp bot              │
-└──────────────────────────┬──────────────────────────────────────┘
+                        INTERACTIVE  (user-initiated)
+┌──────────────────────────────────────────────────────────────────┐
+│  Any consumer: city admin · state official · AI agent ·          │
+│  HCM console · PGR copilot · WhatsApp bot                        │
+└──────────────────────────┬───────────────────────────────────────┘
                            │
               ┌────────────▼────────────┐
               │       API Gateway        │
               │  Whitelist: bootstrap    │
               │  Protected: JWT → fwd   │
-              └────────────┬────────────┘
-                           │
-         ┌─────────────────┼─────────────────┐
-         │                 │                 │
-   ┌─────▼──────┐  ┌───────▼──────┐  ┌──────▼──────┐
-   │  RAG V5    │  │  MCP Server  │  │  Temporal   │
-   │  Layer 1   │  │  Layer 2     │  │  Layer 2    │
-   │            │  │              │  │             │
-   │  "How do   │  │  Auto-gen    │  │  Cross-     │
-   │  I..."     │  │  from specs  │  │  module     │
-   │  queries   │  │  + confirm   │  │  workflows  │
-   │            │  │  gate        │  │             │
-   └─────┬──────┘  └───────┬──────┘  └──────┬──────┘
-         │                 │                 │
-         └─────────────────┼─────────────────┘
-                           │ Bearer token forwarded
-                           │ Audit log written
-                           ▼
-         ┌─────────────────────────────────────┐
-         │         DIGIT APIs                  │
-         │  (specs at certificate standard)    │
-         │  + interaction diagrams             │
-         │  + response enrichment              │
-         │                                     │
-         │  certificate · pgr · tl · bpa ·      │
-         │  property · fire-noc · water ·      │
-         │  works · hcm · waste · mcollect ·   │
-         │  social-benefits · ifix · dristi    │
-         │  + all other DIGIT products         │
-         └─────────────────────────────────────┘
+              └──────┬──────┬───────────┘
+                     │      │
+          ┌──────────┘      └──────────────────┐
+          │                 │                  │
+  ┌───────▼──────┐  ┌───────▼────────┐  ┌─────▼──────────┐
+  │   RAG V5     │  │   MCP Server   │  │      n8n        │
+  │              │  │                │  │                 │
+  │  "How do     │  │  Auto-gen from │  │  Cross-module   │
+  │   I..." Q&A  │  │  specs         │  │  workflows      │
+  │              │  │  + confirm     │  │  (5 flows)      │
+  │              │  │  gate + audit  │  │                 │
+  └───────┬──────┘  └───────┬────────┘  └─────┬──────────┘
+          └─────────────────┼───────────────────┘
+                            │ Bearer token forwarded · Audit log written
+                            ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                        DIGIT APIs                               │
+│                                                                 │
+│  Platform (digit-specs/v3.0.0):                                 │
+│  workflow · individual · boundary · idgen · mdms ·              │
+│  notification · filestore · billing · registry · ...            │
+│                                                                 │
+│  Application (certificate standard):                            │
+│  certificate · pgr · trade-license · bpa · property ·          │
+│  fire-noc · water · works · hcm · social-benefits ·            │
+│  ifix · waste · mCollect · DRISTI · ...                         │
+└──────────────┬──────────────────────────────┬───────────────────┘
+               │ reads records (scheduled)     │ writes flags + triggers alerts
+               ▼                               │
+┌──────────────────────────────────────────────┘
+│         INTELLIGENCE LAYER  (scheduled · domain-specific · shared pattern)
+│
+│  Flagging microservices (one per domain):
+│    GIS cross-reference  —  declared use vs satellite land-use
+│    Area discrepancy     —  declared sq ft vs satellite measurement
+│    Demographic rules    —  age/status/pregnancy field consistency
+│    Deduplication        —  on-device (Flutter) + server-side (MOSIP)
+│
+│  Alert engine (shared):
+│    recurrence detector → DIGIT notification → WhatsApp / SMS
+│
+│  External data:
+│    WorldPop · Google Open Buildings · GIS land-use layers
+└──────────────────────────────────────────────────────────────────
+                    INTELLIGENCE  (scheduled, automated)
 ```
 
 No semantic layer. No tool registry. No custom intent classifier. No skills for single-service operations.
@@ -288,14 +306,14 @@ The pattern across all relevant AoP initiatives: each team is solving a real dom
 
 | # | Initiative | Role in architecture | Direction |
 |---|---|---|---|
-| 2 | LLM guidance chatbot | RAG V5 — Layer 1 | Keep. Expand knowledge base to include all specs + interaction diagrams. |
-| 5 | MCP for DIGIT PGR | MCP Server — Layer 2 | Generalize. Don't build PGR-specific — build the generator that produces MCP from any spec. PGR is the first test case, not the final scope. |
-| 8 | Service Config AI Agent | Limited — see note | Reframe. Configuration is one-time per city (not at-scale) and tenant isolation prevents cross-city template borrowing. The confirmation gate mechanism is still needed at the platform level — but for operational write operations (transition approvals, batch renewals), not configuration. |
-| 13 | Console config chatbot | Layer 1 + Layer 2 | Don't build RAG for config generation — RAG answers questions, it can't execute. Wire RAG V5 (questions) + confirmation gate (actions) with a thin intent router between them. |
-| 17 | HCM support chatbot | Layer 2 + Layer 4 | Keep. This is the HCM-facing interface to the shared Layer 2. Should call the MCP server, not embed its own AI logic. |
-| 19 | HCM conversational data layer | Layer 2 (conversational) + Layer 3 (fraud) | Split the two concerns. Fraud detection = Layer 3 intelligence microservice (domain-specific). Conversational data layer = shared Layer 2, not HCM-specific. |
-| 20 | PGR integration with Temporal | Cross-module orchestration | Critical. Temporal is the right engine for cross-module workflows. Scope should expand beyond PGR to all five key cross-module flows. |
-| 22 | HCM Console AI Copilot | Layer 4 application | Keep as the application pattern. Ensure it calls the shared MCP server + confirmation gate rather than embedding its own AI layer. |
+| 2 | LLM guidance chatbot | RAG V5 | Keep. Expand knowledge base to include all specs + interaction diagrams. |
+| 5 | MCP for DIGIT PGR | MCP Server | Generalize. Don't build PGR-specific — build the generator that produces MCP from any spec. PGR is the first test case, not the final scope. |
+| 8 | Service Config AI Agent | Limited — see note | Reframe. Configuration is one-time per city (not at-scale) and tenant isolation prevents cross-city template borrowing. The confirmation gate is still needed — but for operational write operations (transition approvals, batch renewals), not configuration. |
+| 13 | Console config chatbot | RAG V5 + MCP Server | Don't build RAG for config generation — RAG answers questions, it can't execute. Wire RAG V5 (questions) + confirmation gate (actions) with a thin intent router between them. |
+| 17 | HCM support chatbot | MCP Server + application interface | Keep. Should call the shared MCP server, not embed its own AI logic. |
+| 19 | HCM conversational data layer | MCP Server (conversational) + Intelligence microservice (fraud detection) | Split the two concerns. Fraud detection = domain-specific intelligence microservice. Conversational layer = shared MCP server, not HCM-specific. |
+| 20 | PGR integration with Temporal | Cross-module orchestration | n8n handles most workflows (already deployed at eGov). Scope should expand beyond PGR to all five cross-module flows. Temporal specifically for Start a Business saga compensation. |
+| 22 | HCM Console AI Copilot | Application layer | Keep as the application pattern. Ensure it calls the shared MCP server + confirmation gate rather than embedding its own AI logic. |
 
 ### Indirectly relevant — useful acceleration, not core architecture
 
@@ -303,7 +321,7 @@ The pattern across all relevant AoP initiatives: each team is solving a real dom
 |---|---|---|
 | 4 | AI for development (Claude/Cursor) | Accelerates building everything above |
 | 6 | Tech design automation | Could auto-generate interaction diagrams from service code — high-value if it works |
-| 12 | Automating HCM implementation tasks | Layer 2 setup intents for HCM — add to orchestrator, don't build separately |
+| 12 | Automating HCM implementation tasks | MCP Server setup intents for HCM — add to the shared server, don't build separately |
 
 ### Not relevant to platform AI architecture
 
@@ -327,18 +345,24 @@ The pattern across all relevant AoP initiatives: each team is solving a real dom
 
 **From the platform team (5 items):**
 
-1. Raise all 7 existing specs to the certificate service standard — human-readable codes, rich descriptions, examples, tenantId from Bearer, idempotency keys
+1. Raise all ~18 domain product specs to the certificate service standard — human-readable codes, rich descriptions, examples, tenantId from Bearer, idempotency keys (7 rewrite from Swagger 2.0, ~11 create new)
 2. Add interaction diagrams (websequencediagrams/Mermaid format) for each major operation — prerequisites, data on arrows, failure alt block
 3. Add response enrichment — return code + label in the same response field
 4. Configure gateway — bootstrap whitelist + JWT propagation
 5. Define audit log schema at the platform level
 
-**From the AI execution layer (3 items — built once):**
+**From the AI execution layer (3 items — built once, shared by all):**
 
-1. MCP server generator — auto-generate from specs, add progressive disclosure groups, deploy
-2. Confirmation gate — Redis pending action store, confirm endpoint, audit log writer
-3. Cross-module Temporal workflows — 5 workflows authored, Temporal as execution engine
+1. MCP server — auto-generate from specs, add progressive disclosure groups, deploy
+2. Confirmation gate + audit log writer — Redis pending action store, confirm endpoint, PostgreSQL audit log
+3. Cross-module n8n workflows — 5 workflows, n8n-first (already deployed); Temporal specifically for Start a Business saga compensation
 
-**What the 8 relevant AoP teams need to do differently:**
+**From the intelligence layer (one per domain, shared pattern):**
 
-Stop building separate auth, confirmation, and entity resolution in each initiative. Call the shared MCP server + confirmation gate instead. The domain-specific work (HCM fraud detection, PGR intelligence, console UX) is where each team's effort belongs.
+4. Flagging microservices — one per domain, built to the shared pattern (read records, cross-reference external signal, write flag via DIGIT API)
+5. GIS cross-reference engine — Trade License + Property Tax as first domains; WorldPop + Google Open Buildings for HCM (in progress)
+6. Alert engine — shared recurrence detector + DIGIT notification integration
+
+**What the relevant AoP teams need to do differently:**
+
+Stop building separate auth, confirmation, and audit trail in each initiative. Call the shared MCP server + confirmation gate instead. The domain-specific work (HCM fraud detection, PGR intelligence, console UX) is where each team's effort belongs.
