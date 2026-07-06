@@ -243,41 +243,54 @@ Two distinct interaction modes. The diagram shows both.
 └──────────────────────────┬───────────────────────────────────────┘
                            │
               ┌────────────▼────────────┐
-              │    Kong  (digit3)        │
+              │      Kong  (digit3)      │
               │  JWT validate + fwd  ✓  │
               │  X-Tenant-ID inject  ✓  │
               │  RBAC (accesscontrol)✓  │
               │  Bootstrap whitelist ✓  │
-              └──────┬──────┬───────────┘
-                     │      │
-          ┌──────────┘      └──────────────────┐
-          │                 │                  │
-  ┌───────▼──────┐  ┌───────▼────────┐  ┌─────▼──────────┐
-  │   RAG V5     │  │   MCP Server   │  │      n8n        │
-  │              │  │                │  │                 │
-  │  "How do     │  │  Auto-gen from │  │  Cross-module   │
-  │   I..." Q&A  │  │  specs         │  │  workflows      │
-  │              │  │  + confirm     │  │  (5 flows)      │
-  │              │  │  gate + audit  │  │                 │
-  └───────┬──────┘  └───────┬────────┘  └─────┬──────────┘
-          └─────────────────┼───────────────────┘
-                            │ Bearer token forwarded · Audit log written
-                            ▼
+              └──────┬──────┬──────┬────┘
+                     │      │      │
+          ┌──────────┘      │      └────────────────────────────┐
+          │                 │                                  │
+  ┌───────▼──────┐  ┌───────▼────────┐    ┌─────────────────────▼──────────────┐
+  │   RAG V5     │  │   MCP Server   │    │   n8n                               │
+  │              │  │                │    │                                     │
+  │  Q&A from    │  │  auto-gen from │    │  cross-module orchestration         │
+  │  corpus      │  │  specs         │    │  5 workflows · saga                 │
+  │  docs +      │  │  + confirm     │    │                                     │
+  │  diagrams    │  │  gate + audit  │    │  sequences / parallelises           │
+  │              │  │                │    │  calls across app services          │
+  │  no DIGIT    │  │  direct ops    │    │  (each app svc calls platform       │
+  │  API calls   │  │  (app +        │    │  services internally)               │
+  └──────────────┘  │  platform)     │    └──────────────────────┬──────────────┘
+                    └───────┬────────┘                           │
+                            │ Bearer token forwarded             │
+                            │ Audit log written                  │
+                            └────────────────────┬───────────────┘
+                                                 ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                        DIGIT APIs                               │
+│  Application Services  (certificate standard)                   │
 │                                                                 │
-│  Platform (digit-specs/v3.0.0):                                 │
-│  workflow · individual · boundary · idgen · mdms ·              │
-│  notification · filestore · billing · registry · ...            │
-│                                                                 │
-│  Application (certificate standard):                            │
 │  certificate · pgr · trade-license · bpa · property ·          │
 │  fire-noc · water · works · hcm · social-benefits ·            │
 │  ifix · waste · mCollect · DRISTI · ...                         │
-└──────────────┬──────────────────────────────┬───────────────────┘
-               │ reads records (scheduled)     │ writes flags + triggers alerts
-               ▼                               │
-┌──────────────────────────────────────────────┘
+│                                                                 │
+│  each: spec + interaction diagram                               │
+└──────────────────────────┬──────────────────────────────────────┘
+                           │ each app service calls platform services
+                           ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  Platform Services  (digit-specs/v3.0.0)                        │
+│                                                                 │
+│  workflow · individual · boundary · idgen · mdms ·              │
+│  notification · filestore · billing · registry · ...           │
+└─────────────────────────────────────────────────────────────────┘
+
+            ↑ reads application service records (scheduled)
+            │ writes flags back via application service APIs
+            │ alert engine sends via DIGIT notification (platform)
+            │
+┌───────────┴──────────────────────────────────────────────────────
 │         INTELLIGENCE LAYER  (scheduled · domain-specific · shared pattern)
 │
 │  Flagging microservices (one per domain):
