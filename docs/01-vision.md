@@ -6,9 +6,11 @@ DIGIT 3.0 already exists. Sixteen platform services. Eighteen domain products. J
 
 The missing piece is not more platform. The missing piece is that no LLM can currently operate it.
 
-Give Claude the DIGIT codebase today. It can read it and explain it. It cannot call any live API. It cannot authenticate as a user. It cannot confirm before making a change. It cannot log what it did.
+Give Claude the DIGIT codebase and terminal access. For a developer in a sandbox this works — Claude has been used to implement services using the client library and configure DIGIT via CLI commands. But this is a developer operating as a service account in a controlled environment.
 
-Reading about DIGIT is not operating DIGIT.
+For operational use, this breaks down. A city administrator cannot operate via terminal. When Claude calls a DIGIT API on behalf of a user, that user's identity must propagate — DIGIT's own RBAC must see the right person, not a service account. Every write needs an enforced confirmation step, not a comment in a conversation. Every AI-initiated action needs to be logged: who asked, what Claude decided, what executed, what came back.
+
+Repo access enables development. MCP enables operations.
 
 That is the gap this proposal closes.
 
