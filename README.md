@@ -54,6 +54,7 @@ What the 2.9 design got right that carries forward: progressive disclosure, "too
 | [11 — Minimal AI Platform](docs/11-minimal-ai-platform.md) | **The architecture**: with specs at the certificate standard, exactly what artifacts remain, what is eliminated, which AoP projects are relevant |
 | [12 — Mini Projects](docs/12-mini-projects-revised.md) | The 9 concrete projects: two spec tracks (P1a platform, P1b application), two diagram tracks (P2a, P2b), MCP, confirmation gate, audit log, RAG adaptation, Temporal |
 | [13 — Two-Level Spec Architecture](docs/13-two-level-spec-architecture.md) | Platform specs vs application specs: what each level needs, two types of interaction diagrams, how MCP spans both |
+| [14 — AI Patterns Across DIGIT Products](docs/14-ai-patterns-across-digit-products.md) | 5 generalizable patterns (flagging, GIS cross-reference, proactive alerting, deduplication, process intelligence) mapped across all 20 eGov products |
 
 ---
 
