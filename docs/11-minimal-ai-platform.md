@@ -229,6 +229,8 @@ The five that matter:
 
 **For execution:** n8n (already deployed at eGov) handles 4 of the 5 workflows — Commissioner's Brief, Revenue Recovery, Post-disaster Triage, and Annual Renewal are parallel-reads or single-path writes that n8n covers well. Start a Business requires parallel execution + saga compensation (if Fire NOC fails after Trade License succeeded, roll back Trade License) — Temporal is the right engine for that specific workflow. See [Mini Projects](12-mini-projects-revised.md) section 6 for the workflow-by-workflow breakdown.
 
+n8n and Temporal are sequencers, not a second write path. Every step that writes to a DIGIT service — whether triggered by a live user or a cron schedule — calls the same MCP tool the interactive path uses, so it is schema-checked and audit-logged the same way. What changes for scheduled workflows is *when* human authorization happens: instead of a synchronous "confirm this one action" prompt, a person approves the workflow definition or campaign up front (e.g. "run annual renewal for all active holders in Amritsar"), and each step's write still lands in the same audit log. The confirmation gate is satisfied once, earlier, not skipped.
+
 ---
 
 ## The Complete Architecture
@@ -236,38 +238,42 @@ The five that matter:
 Two distinct interaction modes. The diagram shows both.
 
 ```
-                        INTERACTIVE  (user-initiated)
-┌──────────────────────────────────────────────────────────────────┐
-│  Any consumer: city admin · state official · AI agent ·          │
-│  HCM console · PGR copilot · WhatsApp bot                        │
-└──────────────────────────┬───────────────────────────────────────┘
-                           │
-              ┌────────────▼────────────┐
-              │      Kong  (digit3)      │
-              │  JWT validate + fwd  ✓  │
-              │  X-Tenant-ID inject  ✓  │
-              │  RBAC (accesscontrol)✓  │
-              │  Bootstrap whitelist ✓  │
-              └──────┬──────┬──────┬────┘
-                     │      │      │
-          ┌──────────┘      │      └────────────────────────────┐
-          │                 │                                  │
-  ┌───────▼──────┐  ┌───────▼────────┐    ┌─────────────────────▼──────────────┐
-  │   RAG V5     │  │   MCP Server   │    │   n8n                               │
-  │              │  │                │    │                                     │
-  │  Q&A from    │  │  auto-gen from │    │  cross-module orchestration         │
-  │  corpus      │  │  specs         │    │  5 workflows · saga                 │
-  │  docs +      │  │  + confirm     │    │                                     │
-  │  diagrams    │  │  gate + audit  │    │  sequences / parallelises           │
-  │              │  │                │    │  calls across app services          │
-  │  no DIGIT    │  │  direct ops    │    │  (each app svc calls platform       │
-  │  API calls   │  │  (app +        │    │  services internally)               │
-  └──────────────┘  │  platform)     │    └──────────────────────┬──────────────┘
-                    └───────┬────────┘                           │
-                            │ Bearer token forwarded             │ Bearer token forwarded
-                            │ Audit log written                  │ (no audit log)
-                            └────────────────────┬───────────────┘
-                                                 ▼
+                        INTERACTIVE  (user-initiated)                 SCHEDULED  (cron-triggered)
+┌──────────────────────────────────────────────────────────────────┐ ┌─────────────────────────────┐
+│  Any consumer: city admin · state official · AI agent ·          │ │  n8n / Temporal              │
+│  HCM console · PGR copilot · WhatsApp bot                        │ │  cross-module orchestration  │
+└──────────────────────────┬───────────────────────────────────────┘ │  5 workflows · saga           │
+                           │                                          │  sequences steps; each write  │
+              ┌────────────▼────────────┐                            │  is one MCP tool call         │
+              │      Kong  (digit3)      │                            └──────────────┬────────────────┘
+              │  JWT validate + fwd  ✓  │                                           │
+              │  X-Tenant-ID inject  ✓  │                                           │ calls MCP tools
+              │  RBAC (accesscontrol)✓  │                                           │ (no separate path
+              │  Bootstrap whitelist ✓  │                                           │  to app services)
+              └──────┬──────────┬───────┘                                           │
+                     │          │                                                    │
+          ┌──────────┘          └───────────────────┐                              │
+          │                                         │                              │
+  ┌───────▼──────┐                          ┌───────▼────────┐◄─────────────────────┘
+  │   RAG V5     │                          │   MCP Server    │
+  │              │                          │                 │
+  │  Q&A from    │                          │  auto-gen from  │
+  │  corpus      │                          │  specs          │
+  │  docs +      │                          │  + confirm gate │
+  │  diagrams    │                          │  (interactive:  │
+  │              │                          │  per-action;    │
+  │  no DIGIT    │                          │  scheduled:     │
+  │  API calls   │                          │  pre-approved   │
+  │              │                          │  at definition) │
+  │              │                          │  + audit log,   │
+  │              │                          │  always written │
+  └──────────────┘                          │  direct ops     │
+                                             │  (app +         │
+                                             │  platform)      │
+                                             └───────┬─────────┘
+                                                     │ Bearer token forwarded
+                                                     │ Audit log written
+                                                     ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │  Application Services  (certificate standard)                   │
 │                                                                 │
@@ -324,6 +330,8 @@ Two distinct interaction modes. The diagram shows both.
 ```
 
 No semantic layer. No tool registry. No custom intent classifier. No skills for single-service operations.
+
+**Note: "HCM console" in the consumer row is not the console's existing traffic.** A user clicking a button in the console today calls the application service directly — that path is unchanged and never touches Kong's AI routes. "HCM console" in the diagram means an AI copilot embedded inside the console (a chat panel) that, when used, calls the MCP server like any other consumer — same Kong, same auth, same application services, reached by natural language instead of a click. The confirmation gate's output (see Confirmation gate above) does not have to be a chat bubble — it can render as a native card inside the console UI.
 
 ---
 

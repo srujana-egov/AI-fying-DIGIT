@@ -10,15 +10,11 @@ Audience: Principal architect of DIGIT.
 
 This repository documents the thinking, experiments, and architectural proposal behind making DIGIT AI-ready. It is not a critique of the platform. It is a study of what the platform already enables, what small additions would unlock significantly more AI capability, and what the AI layer itself needs to look like.
 
-Two internal experiments informed this:
+Four experiments informed this:
 - **DIGIT MCP** — capability surface for DIGIT 2.9: what the platform can do, exposed as tools for AI agents
 - **digit-ai-orchestrator** — safety layer: what AI is allowed to do right now, based on deployment state
-
-A third is underway:
 - **Smart Grievance Mapping** (intern project, due July 30) — the intelligence + application layers for PGR, proving a replicable pattern
-
-And a fourth is live:
-- **EGOV RAG V5** — DIGIT Studio documentation chatbot with feedback loop
+- **EGOV RAG V5** — DIGIT Studio documentation chatbot with feedback loop (live)
 
 These four pieces, studied together with DIGIT 3.0's actual capabilities and the certificate service spec as the platform's own quality standard, produce a coherent and minimal AI architecture.
 
@@ -26,17 +22,15 @@ These four pieces, studied together with DIGIT 3.0's actual capabilities and the
 
 ## The Central Claim
 
-> With specs at the certificate service standard and interaction diagrams, the remaining AI layer is three things: an MCP server (auto-generated from specs), a confirmation gate (~100 lines), and Temporal for cross-module workflows. Everything else is eliminated or already in the platform.
+> With specs at the certificate service standard and interaction diagrams, the remaining AI layer is three things: an MCP server (auto-generated from specs), a confirmation gate (~100 lines), and n8n for cross-module workflows. Everything else is eliminated or already in the platform.
 
 Specifically:
-- Specs at certificate standard → MCP tools **auto-generated**, not hand-authored. Human-readable codes in specs → **semantic/entity resolution layer eliminated**
+- Specs at certificate standard → MCP tools **auto-generated**, not hand-authored. Human-readable codes → **semantic/entity resolution layer eliminated**
 - Workflow service exposes valid transitions → **no custom state-gating code**; query the platform instead
 - LLM tool selection from spec descriptions → **no custom intent classifier**
 - Certificate service (`digitnxt/license-certificate`) is the quality standard for application-level specs. Platform-level specs (`digitnxt/digit-specs/v3.0.0`) are a separate level needing different improvements
 
-What still needs building: specs at the right standard (two levels — see doc 13), interaction diagrams (two types), MCP server (auto-generated), confirmation gate, Temporal for 5 cross-module workflows.
-
-What the 2.9 design got right that carries forward: progressive disclosure, "tools encode judgment not just structure," the one-registry-every-interface principle, dual transport, unit economics. See [09 — Comparison](docs/09-comparison-digit29-vs-digit30.md) for detail.
+What still needs building: specs at the right standard (two levels — see doc 13), interaction diagrams (two types), MCP server, confirmation gate, n8n cross-module workflows (Temporal only for Start a Business saga compensation).
 
 ---
 
@@ -44,14 +38,14 @@ What the 2.9 design got right that carries forward: progressive disclosure, "too
 
 | Document | What it covers |
 |---|---|
-| [01 — Vision](docs/01-vision.md) | The end state: what AI-fying DIGIT makes possible for city administrators and state officials |
-| [02 — Stakeholders](docs/02-stakeholders.md) | Who interacts with DIGIT at the platform level and what AI genuinely adds for each |
-| [03 — Existing Experiments](docs/03-existing-experiments.md) | DIGIT MCP, orchestrator, RAG V5, intern project — what was built and what was learned |
+| [01 — Vision](docs/01-vision.md) | The end state: what AI-fying DIGIT makes possible for city administrators, state officials, and field workers |
+| [02 — Stakeholders](docs/02-stakeholders.md) | Who interacts with DIGIT at the platform level, what AI genuinely adds for each, and why developers and one-time city setup are out of scope |
+| [03 — Existing Experiments](docs/03-existing-experiments.md) | DIGIT MCP, orchestrator, RAG V5, intern projects — what was built and what was learned |
 | [07 — Security & Governance](docs/07-security-governance.md) | Every concern raised, with specific mitigations |
-| [11 — Minimal AI Platform](docs/11-minimal-ai-platform.md) | **The architecture**: with specs at the certificate standard, exactly what artifacts remain, what is eliminated, which AoP projects are relevant |
-| [12 — Mini Projects](docs/12-mini-projects-revised.md) | The 9 concrete projects: two spec tracks (P1a platform, P1b application), two diagram tracks (P2a, P2b), MCP, confirmation gate, audit log, RAG adaptation, Temporal |
+| [11 — Minimal AI Platform](docs/11-minimal-ai-platform.md) | **The architecture**: with specs at the certificate standard, exactly what artifacts remain and what is eliminated |
+| [12 — Mini Projects](docs/12-mini-projects-revised.md) | The 9 concrete projects: two spec tracks, two diagram tracks, MCP, confirmation gate, audit log, RAG adaptation, n8n workflows |
 | [13 — Two-Level Spec Architecture](docs/13-two-level-spec-architecture.md) | Platform specs vs application specs: what each level needs, two types of interaction diagrams, how MCP spans both |
-| [14 — AI Patterns Across DIGIT Products](docs/14-ai-patterns-across-digit-products.md) | 5 generalizable patterns (flagging, GIS cross-reference, proactive alerting, deduplication, process intelligence) mapped across all 20 eGov products |
+| [14 — AI Patterns Across DIGIT Products](docs/14-ai-patterns-across-digit-products.md) | 5 generalizable patterns (flagging, GIS cross-reference, proactive alerting, deduplication, process intelligence) mapped across all 18 eGov domain products |
 
 ---
 
@@ -59,40 +53,50 @@ What the 2.9 design got right that carries forward: progressive disclosure, "too
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│  Any consumer: city admin, state official, AI agent,         │
-│  HCM console, PGR copilot                                    │
+│  Any consumer: city admin · state official · field worker    │
+│  AI agent · HCM console · PGR copilot                        │
 └─────────────────────┬────────────────────────────────────────┘
                       │
          ┌────────────▼────────────┐
-         │       API Gateway        │
-         │  Whitelist: bootstrap    │
-         │  Protected: JWT → fwd   │
-         └──────┬──────┬───────────┘
-                │      │
-      ┌─────────┘      └──────────────┐
-      │                               │
-┌─────▼──────┐  ┌──────────────┐  ┌──▼──────────┐
-│  RAG V5    │  │  MCP Server  │  │  Temporal   │
-│            │  │              │  │             │
-│  "How do   │  │  Auto-gen    │  │  Cross-     │
-│  I..."     │  │  from specs  │  │  module     │
-│  queries   │  │  + confirm   │  │  workflows  │
-│            │  │  gate        │  │             │
-└─────┬──────┘  └──────┬───────┘  └──────┬──────┘
-      └─────────────────┼─────────────────┘
-                        │ Bearer token forwarded
-                        ▼
-      ┌─────────────────────────────────────┐
-      │      DIGIT APIs (two levels)        │
-      │                                     │
-      │  Platform: workflow · individual ·  │
-      │  boundary · idgen · mdms · ...      │
-      │  (digit-specs/v3.0.0)               │
-      │                                     │
-      │  Application: certificate · PGR ·  │
-      │  trade license · BPA · ...          │
-      │  (license-certificate, etc.)        │
-      └─────────────────────────────────────┘
+         │      Kong (digit3)       │
+         │  JWT validate + forward  │
+         │  X-Tenant-ID inject      │
+         │  RBAC (accesscontrol)    │
+         └──────┬──────┬──────┬────┘
+                │      │      │
+      ┌─────────┘      │      └───────────────┐
+      │                │                      │
+┌─────▼──────┐  ┌──────▼────────┐  ┌──────────▼──────┐
+│  RAG V5    │  │  MCP Server   │  │  n8n            │
+│            │  │               │  │                 │
+│  "How do   │  │  auto-gen     │  │  5 cross-module │
+│  I..."     │  │  from specs   │  │  workflows      │
+│            │  │  confirm gate │  │                 │
+│            │  │  audit log    │  │                 │
+└────────────┘  └──────┬────────┘  └──────┬──────────┘
+                       └────────┬──────────┘
+                                │ Bearer token forwarded
+                                ▼
+┌──────────────────────────────────────────────────────────────┐
+│  Application Services  (certificate standard)                │
+│  certificate · pgr · trade-license · bpa · property ·       │
+│  fire-noc · water · works · hcm · ...                        │
+└──────────────────────┬───────────────────────────────────────┘
+                       │
+                       ▼
+┌──────────────────────────────────────────────────────────────┐
+│  Platform Services  (digit-specs/v3.0.0)                     │
+│  workflow · individual · boundary · idgen · mdms ·           │
+│  notification · filestore · billing · ...                    │
+└──────────────────────────────────────────────────────────────┘
+
+                              ↕ scheduled agents (no human trigger)
+┌──────────────────────────────────────────────────────────────┐
+│  Intelligence Layer                                          │
+│  Flagging · GIS Cross-Reference · Proactive Alerting ·       │
+│  Deduplication · Process Intelligence                        │
+│  (reads application service records, writes flags via API)   │
+└──────────────────────────────────────────────────────────────┘
 ```
 
 No semantic layer. No custom intent classifier. No entity resolution service. No hand-authored tool registry.
@@ -104,14 +108,16 @@ No semantic layer. No custom intent classifier. No entity resolution service. No
 | Component | What it is | Status |
 |---|---|---|
 | EGOV RAG V5 | Documentation Q&A chatbot | Live (DIGIT Studio docs) |
-| digit-ai-orchestrator | Confirmation gate pattern (10 setup intents) | Built, 186 tests passing |
-| Smart Grievance Mapping | Intelligence microservice + dashboard for PGR | In progress (due July 30) |
+| digit-ai-orchestrator | Confirmation gate pattern (10 setup intents) | Built |
+| Smart Grievance Mapping | Intelligence microservice for PGR (intern project) | In progress — due July 30 |
+| HCM Population Denominator | GIS cross-reference: WorldPop + Google Open Buildings vs HCM enrollment (intern project) | In progress |
+| HCM Beneficiary Deduplication | On-device fuzzy match Flutter library (intern project) | In progress |
 | P1a — Platform spec improvements | Examples, idempotency on 16 platform specs | Proposed |
-| P1b — Application spec rewrites/creation | ~18 domain product specs → certificate standard (7 rewrite, ~11 create new) | Proposed |
+| P1b — Application spec rewrites | ~18 domain product specs → certificate standard | Proposed |
 | P2a — Platform interaction diagrams | Internal behavior diagrams (~35-48) | Proposed |
-| P2b — Application interaction diagrams | Cross-service orchestration diagrams (~28) | Proposed |
+| P2b — Application interaction diagrams | Cross-service orchestration diagrams (~55-70) | Proposed |
 | P3 — MCP Server | Auto-generated from specs (both levels) | Proposed |
 | P4 — Confirmation gate | ~100 lines, Redis, for all write operations | Proposed |
 | P5 — Audit log | Platform-level schema, all AI callers | Proposed |
-| P6 — RAG V5 spec ingestion | Endpoint-aware chunking for specs + diagrams | Proposed |
-| P7 — Temporal workflows | 5 cross-module workflows | Proposed |
+| P6 — RAG V5 diagram ingestion | Ingest interaction diagrams into knowledge base | Proposed |
+| P7 — n8n workflows | 5 cross-module workflows (Temporal for Start a Business saga) | Proposed |
