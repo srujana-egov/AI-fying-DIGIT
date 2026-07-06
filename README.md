@@ -53,6 +53,7 @@ What Chakshu's 2.9 design got right that carries forward to 3.0: progressive dis
 | [07 — Security & Governance](docs/07-security-governance.md) | Every concern raised, with specific mitigations |
 | [08 — Roadmap](docs/08-roadmap.md) | Timeline, sequencing, dependencies |
 | [09 — Comparison: 2.9 vs 3.0](docs/09-comparison-digit29-vs-digit30.md) | Decision-by-decision: what 3.0 changes about Chakshu's approach, and what remains correct |
+| [10 — Existing AI Initiatives](docs/10-existing-ai-initiatives.md) | 10 active eGov AI initiatives mapped to the 4-layer architecture, with the assumption each carries that may need revisiting |
 
 ---
 
