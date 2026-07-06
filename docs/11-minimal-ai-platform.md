@@ -9,10 +9,15 @@ This document answers that precisely.
 
 ## What the Current digit-specs Look Like vs the Target Standard
 
-Current specs in `digitnxt/digit-specs`:
+Application-level specs span all DIGIT domain products — 20 in total across local governance, public health, public finance, water & sanitation, revenue, and justice. Not all have specs today.
+
+**7 found in `digitnxt/digit-specs` (2.9-era):**
 `tl-service.yml` · `bpa.yaml` · `property-services.yml` · `fire-noc.yaml` · `water-sewerage.yaml` · `pgr.yml` · `birth-registration.yaml`
 
 These are 2.9-era specs. Opaque codes, minimal descriptions, RequestInfo wrappers, no examples, no error semantics.
+
+**~11 additional products need specs created at certificate standard:**
+Works Management · HCM · 10 Bed ICU · DIVOC · Social Benefits · iFix · Waste Management · Water Supply O&M · Water Schemes O&M · mCollect · DRISTI
 
 **The target standard** (certificate service spec) has:
 
@@ -26,7 +31,7 @@ These are 2.9-era specs. Opaque codes, minimal descriptions, RequestInfo wrapper
 | Error semantics | Generic 500s | Meaningful: 409 for duplicate, 403 for inactive, 404 for not found |
 | Cross-service deps | Not mentioned | Named in descriptions ("Form Registry manages certificateDetail schema") |
 
-**What raising all 7 specs to this standard eliminates:**
+**What raising all application specs to this standard eliminates:**
 
 | What the 2.9 experiment built | Why it existed | Status at certificate standard |
 |---|---|---|
@@ -263,9 +268,11 @@ The five that matter:
          │  + interaction diagrams             │
          │  + response enrichment              │
          │                                     │
-         │  tl-service · bpa · property ·      │
-         │  fire-noc · water · pgr ·           │
-         │  birth-reg · certificate · ...      │
+         │  certificate · pgr · tl · bpa ·      │
+         │  property · fire-noc · water ·      │
+         │  works · hcm · waste · mcollect ·   │
+         │  social-benefits · ifix · dristi    │
+         │  + all other DIGIT products         │
          └─────────────────────────────────────┘
 ```
 

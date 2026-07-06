@@ -40,7 +40,11 @@ These are already OpenAPI 3.0.3 with clean design. The gap is not a rewrite — 
 
 **Owner:** Platform team + service owners  
 **Effort:** ~3-4 weeks per service  
-**Services:** tl-service, bpa, property-services, fire-noc, water-sewerage, pgr, birth-registration (7 old 2.9-era specs)
+**Scope:** All ~18 DIGIT domain products (20 total minus Dashboards & Analytics as UI-only, minus DIGIT platform itself)
+
+Two tracks within P1b:
+- **Rewrite** (7 exist as old Swagger 2.0 in digit-specs): tl-service, bpa, property-services, fire-noc, water-sewerage, pgr, birth-registration
+- **Create new** (~11 products with no OpenAPI spec or spec not yet at certificate standard): Works Management, HCM, 10 Bed ICU, DIVOC, Social Benefits, iFix, Waste Management, Water Supply O&M, Water Schemes O&M, mCollect, DRISTI
 
 These are Swagger 2.0 files. The gap is too large for incremental fixes. Full rewrite using `Certificate-3.0.0.yaml` (from `digitnxt/license-certificate`) as the template.
 
@@ -124,7 +128,7 @@ Not every endpoint. Only operations with cross-service calls:
 | Search / List | Usually no | Single service, no cross-service calls |
 | Get by ID | No | Single service |
 
-~4 diagrams per application service × 7 services = **~28 application diagrams total**
+~3-4 diagrams per product × ~18 products = **~55-70 application diagrams total**
 
 ### Exact template required for AI to understand everything
 
@@ -488,7 +492,7 @@ The remaining cross-entity needs are handled by either response enrichment (plat
 | # | Project | Level | Owner | Effort | Blocks |
 |---|---|---|---|---|---|
 | P1a | Improve 16 platform specs (examples, idempotency, internal deps) | Platform | Platform team | 1 wk/service | P2a, P3 |
-| P1b | Rewrite 7 application specs to certificate standard | Application | Platform team + service owners | 3-4 wks/service | P2b, P3 |
+| P1b | Application specs for all ~18 domain products (7 rewrite, ~11 create new) | Application | Platform team + service owners | 3-4 wks/service | P2b, P3 |
 | P2a | Platform internal diagrams (~35-48 total, ~2-3 per service) | Platform | Platform team | 1-2 days/service | MCP quality, RAG quality |
 | P2b | Application cross-service diagrams (~28 total, ~4 per service) | Application | Platform team | 2-3 days/service | MCP quality, RAG quality |
 | P3 | MCP server (auto-generate from specs — both levels) | AI Execution | AI team, 1 developer | 2 weeks | P1a, P1b |

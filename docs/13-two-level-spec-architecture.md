@@ -61,7 +61,15 @@ Platform services do **not** need:
 
 ### Level 2 — Application Services (rewrite, don't improve)
 
-The old application specs (pgr.yml, tl-service.yml, bpa.yaml, water-sewerage.yaml, property-services.yml, fire-noc.yaml, birth-registration.yaml) are 2.9-era Swagger 2.0 files. The gap is too large for incremental fixes. Full rewrite to certificate service standard.
+eGov has ~18 domain products in total. Their specs are in two states:
+
+**7 exist as 2.9-era Swagger 2.0 files** (in digit-specs, gap too large for incremental fix — full rewrite needed):
+`pgr.yml` · `tl-service.yml` · `bpa.yaml` · `water-sewerage.yaml` · `property-services.yml` · `fire-noc.yaml` · `birth-registration.yaml`
+
+**~11 products need specs created at certificate standard** (may have internal specs in other formats, or no OpenAPI spec yet):
+Works Management · HCM · 10 Bed ICU · DIVOC · Social Benefits · iFix · Waste Management · Water Supply O&M · Water Schemes O&M · mCollect · DRISTI
+
+In both cases the target is the same: OpenAPI 3.0.3 at certificate service standard.
 
 What the rewrite delivers:
 - OpenAPI 3.0.3 (not Swagger 2.0)

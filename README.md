@@ -110,7 +110,7 @@ No semantic layer. No custom intent classifier. No entity resolution service. No
 | digit-ai-orchestrator | Confirmation gate pattern (10 setup intents) | Built, 186 tests passing |
 | Smart Grievance Mapping | Intelligence microservice + dashboard for PGR | In progress (due July 30) |
 | P1a — Platform spec improvements | Examples, idempotency on 16 platform specs | Proposed |
-| P1b — Application spec rewrites | 7 old specs → certificate standard | Proposed |
+| P1b — Application spec rewrites/creation | ~18 domain product specs → certificate standard (7 rewrite, ~11 create new) | Proposed |
 | P2a — Platform interaction diagrams | Internal behavior diagrams (~35-48) | Proposed |
 | P2b — Application interaction diagrams | Cross-service orchestration diagrams (~28) | Proposed |
 | P3 — MCP Server | Auto-generated from specs (both levels) | Proposed |
