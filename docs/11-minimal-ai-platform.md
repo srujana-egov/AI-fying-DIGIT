@@ -108,23 +108,22 @@ No resolution middleware needed. The AI gets both the code (for API calls) and t
 
 ---
 
-**4. Gateway configuration**
+**4. Gateway — Kong (digit3) is already configured**
 
-Standard API gateway (Kong / NGINX / any). Two rules:
+Kong is the existing API gateway in `digitnxt/digit3`. The core requirements are already met:
 
-```
-Whitelisted (no JWT required — bootstrap):
-  POST /account/create
-  POST /auth/token
-  POST /otp/send
-  POST /otp/verify
-  POST /user/create (initial admin only)
+| Capability | Status |
+|---|---|
+| JWT validation (RS256, Keycloak JWKS) | ✓ `dynamic-jwt` Lua plugin |
+| Bearer token forwarded to upstream services | ✓ Authorization header passed through unchanged |
+| X-Tenant-ID extracted from JWT and injected as header | ✓ `header-enrichment` plugin |
+| RBAC enforcement via accesscontrol service | ✓ `rbac` plugin |
+| Bootstrap whitelist (`/accounts`, `/keycloak` bypass JWT) | ✓ Configured in `setup.py` |
 
-Protected (validate JWT → propagate downstream):
-  everything else
-```
-
-If the gateway sits above everything and requires JWT for all calls, account creation deadlocks. The whitelist solves the bootstrap problem. After account creation and login, the user's JWT propagates on every downstream call. DIGIT's own RBAC enforces what that JWT can do.
+**What still needs doing:**
+- Register MCP server, RAG V5, and n8n as protected services in Kong's `setup.py` (same pattern as workflow, boundary, idgen)
+- Add per-tenant, per-agent rate limiting — AI agents call at machine speed; existing limits are designed for human-paced interaction
+- Confirm OTP endpoint whitelist behaviour (currently gets JWT + RBAC applied — may need to be whitelisted for unauthenticated OTP flows)
 
 ---
 
@@ -244,9 +243,11 @@ Two distinct interaction modes. The diagram shows both.
 └──────────────────────────┬───────────────────────────────────────┘
                            │
               ┌────────────▼────────────┐
-              │       API Gateway        │
-              │  Whitelist: bootstrap    │
-              │  Protected: JWT → fwd   │
+              │    Kong  (digit3)        │
+              │  JWT validate + fwd  ✓  │
+              │  X-Tenant-ID inject  ✓  │
+              │  RBAC (accesscontrol)✓  │
+              │  Bootstrap whitelist ✓  │
               └──────┬──────┬───────────┘
                      │      │
           ┌──────────┘      └──────────────────┐
@@ -348,7 +349,7 @@ The pattern across all relevant AoP initiatives: each team is solving a real dom
 1. Raise all ~18 domain product specs to the certificate service standard — human-readable codes, rich descriptions, examples, tenantId from Bearer, idempotency keys (7 rewrite from Swagger 2.0, ~11 create new)
 2. Add interaction diagrams (websequencediagrams/Mermaid format) for each major operation — prerequisites, data on arrows, failure alt block
 3. Add response enrichment — return code + label in the same response field
-4. Configure gateway — bootstrap whitelist + JWT propagation
+4. Register MCP server, RAG V5, and n8n with Kong (digit3) — add to `setup.py` as protected services; add AI-specific rate limiting
 5. Define audit log schema at the platform level
 
 **From the AI execution layer (3 items — built once, shared by all):**
