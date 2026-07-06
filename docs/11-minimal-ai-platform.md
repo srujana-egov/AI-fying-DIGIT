@@ -298,17 +298,27 @@ Two distinct interaction modes. The diagram shows both.
 ┌─────────────────────────────────────────────────────────────────
 │         INTELLIGENCE LAYER  (scheduled · domain-specific · shared pattern)
 │
-│  Flagging microservices (one per domain):
-│    GIS cross-reference  —  declared use vs satellite land-use
-│    Area discrepancy     —  declared sq ft vs satellite measurement
-│    Demographic rules    —  age/status/pregnancy field consistency
-│    Deduplication        —  on-device (Flutter) + server-side (MOSIP)
+│  Pattern 1 — Flagging: declared vs expected
+│    field inconsistency · use mismatch · eligibility violation
+│    one microservice per domain · reads records · writes flag via DIGIT API
 │
-│  Alert engine (shared):
+│  Pattern 2 — GIS Cross-Reference: satellite vs registry
+│    land-use (Trade License · Property Tax · BPA · Works Management)
+│    population denominator (HCM) [in progress — PES interns]
+│    External: WorldPop · Google Open Buildings · GIS land-use layers
+│
+│  Pattern 3 — Proactive Alerting: act before the event
 │    recurrence detector → DIGIT notification → WhatsApp / SMS
+│    monsoon prep · non-filer contact · predictive maintenance
 │
-│  External data:
-│    WorldPop · Google Open Buildings · GIS land-use layers
+│  Pattern 4 — Deduplication: point of submission
+│    on-device fuzzy match — Flutter library [in progress — PES interns]
+│    server-side identity match — MOSIP biometric
+│
+│  Pattern 5 — Process Intelligence: workflow history → signal
+│    SLA prediction · bottleneck detection · inspector delay flag
+│    reads DIGIT workflow service timestamps — no new data collection needed
+│
 └──────────────────────────────────────────────────────────────────
                     INTELLIGENCE  (scheduled, automated)
 ```
