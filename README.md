@@ -55,6 +55,7 @@ What Chakshu's 2.9 design got right that carries forward to 3.0: progressive dis
 | [09 — Comparison: 2.9 vs 3.0](docs/09-comparison-digit29-vs-digit30.md) | Decision-by-decision: what 3.0 changes about Chakshu's approach, and what remains correct |
 | [10 — Existing AI Initiatives](docs/10-existing-ai-initiatives.md) | 10 active eGov AI initiatives mapped to the 4-layer architecture, with the assumption each carries that may need revisiting |
 | [11 — Minimal AI Platform](docs/11-minimal-ai-platform.md) | If all specs were at the certificate service standard: exactly what artifacts remain, what is eliminated, and which 8 of 23 AoP projects are relevant |
+| [12 — Mini Projects Revised](docs/12-mini-projects-revised.md) | 7 concrete projects under the new architecture: spec gaps, exact interaction diagram template, MCP build steps, RAG adaptation, Temporal use cases and questions for Ghanshyam |
 
 ---
 
