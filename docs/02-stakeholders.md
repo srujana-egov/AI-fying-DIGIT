@@ -1,126 +1,96 @@
 # Who Actually Talks to DIGIT at the Platform Level
 
-A precise stakeholder map matters because different stakeholders have different interaction patterns, different risk tolerances for AI errors, and different needs from the AI layer.
+Citizens interact with apps built on DIGIT. Whether those apps use AI is the app partner's decision. This proposal does not touch citizen-facing applications.
+
+The stakeholders below interact with DIGIT directly. They fall into two groups: those for whom AI-fying DIGIT adds nothing (developers, implementation teams doing one-time city setup), and those for whom it is transformative (operational users on live systems).
 
 ---
 
-## The Boundary
+## Developers
 
-```
-Citizens
-    → apps built on DIGIT (PuraSeva, CCRS, HCM mobile apps)
-        → DIGIT APIs
-        
-App partners (implementing cities, building apps)
-    → DIGIT APIs directly
-    → digit-cli
-    → digit-client (Java)
-    → [proposed] AI layer
-```
+The right tool for developers building on DIGIT is **repo access + Claude Code**.
 
-Citizens never interact with DIGIT directly. They interact with apps. Whether those apps use AI is the app partner's choice — exactly as whether they use React or Angular is their choice. This proposal does not change anything about citizen-facing AI.
+DIGIT 3.0 ships digit-client (Java), digit-cli, and clean OpenAPI 3.0.3 specs. Add the digit3 repo to your Claude context. Claude reads the specs, understands the client library, writes integration code, executes commands. This already works — the platform team used it to write PGR services and configuration via the CLI.
+
+**AI-fying DIGIT does not help developers build. That problem is already solved at the platform level.**
+
+RAG V5 adds marginal value for documentation Q&A ("what fields does this endpoint require?") but a developer with repo access and Claude Code gets better answers directly from the spec files and service code than from a chatbot.
 
 ---
 
-## Stakeholders Who Interact with DIGIT Directly
+## Why City Configuration Is Not Worth AI-fying
 
-### 1. Implementation Teams
-**Who:** eGov engineers, state implementation partners, city IT teams onboarding a new ULB.
+City onboarding — setting up MDMS, workflow definitions, IDGen formats for a new city — is not a good use of AI for two reasons:
 
-**What they need:**
-- Understand the platform quickly: what APIs exist, what sequences are required, what a valid workflow definition looks like
-- Currently: digit-specs (16 OpenAPI files), digit-client (Java), digit-cli, documentation
+**It is a one-time operation.** City configuration happens once per city. AI provides leverage over recurring operations at scale — thousands of daily transactions. Automating a 10-step one-time setup adds marginal value.
 
-**What AI adds:**
-- Documentation Q&A via RAG V5: "what fields are required for workflow creation?", "what's the correct order for city setup?"
-- Spec exploration and test case generation in developer/sandbox environments
+**Tenant isolation prevents cross-city learning.** DIGIT's tenant isolation means one city cannot read another city's MDMS config, boundary hierarchy, or workflow definitions. An AI agent cannot suggest "configure it like Amritsar did" — that data is architecturally inaccessible.
 
-**What AI does NOT add here:**
-- Configuration of production environments: city configuration happens once per city, not at scale. This is a one-time operation, not a recurring AI problem.
-- Cross-tenant template borrowing: DIGIT's tenant isolation means one city's boundary hierarchy, MDMS config, and workflow definitions cannot be read by another city's setup process. "Import from similar cities" is architecturally impossible.
-- Zero-knowledge production onboarding: implementation teams arrive trained. The onboarding scenario where an org configures a production DIGIT environment with no prior knowledge does not reflect real deployments. Sandbox and developer environments are different.
-
-**Risk tolerance:** N/A for production writes — AI-assisted production configuration is out of scope. Developer environments: high (sandboxed).
-
-**Where AI genuinely helps this group:** Documentation and spec Q&A (RAG V5). Not execution on production systems.
+Implementation teams arrive trained. What helps them is RAG V5 for documentation questions during setup — not AI automating the setup itself.
 
 ---
 
-### 2. City Administrators / Municipal Commissioners
-**Who:** The ULB Commissioner, Deputy Commissioner, department heads.
+## Operational Users — What AI-fying DIGIT Enables
 
-**What they need:**
-- Status across all city services: complaints, collection, workforce, works
-- Intelligence: which wards are at risk, which departments are underperforming, what needs immediate attention
-- Currently: DSS dashboards (static), manual reports, phone calls to department heads
-
-**What AI adds:**
-- Natural language queries over live DIGIT data
-- Cross-domain synthesis (PGR + HCM + Finance in one answer)
-- Proactive alerts before they ask
-- Revenue intelligence: flagged records surfaced for action — trade licenses where GIS shows commercial use but declaration says residential, property tax records where satellite area exceeds declared area. The commissioner's revenue team queries flagged records and acts. The AI does the cross-referencing; the human makes the decision.
-
-**Risk tolerance:** High for reads. Low for writes. A commissioner query that returns wrong data is bad. An AI-initiated state change in government records without confirmation is unacceptable.
+These stakeholders are what this proposal is built for. They work on live systems, against live data, and cannot use an IDE.
 
 ---
 
-### 3. State Government Officials
-**Who:** State Urban Development Department officers, NUDM programme managers.
+### City Administrator
 
-**What they need:**
-- Cross-city intelligence: which cities are performing, which need intervention
-- Scheme implementation tracking across all ULBs
-- Budget utilisation intelligence
-- Currently: Annual reports, district-level data collection, manual compilation
+**What they need:** Status and intelligence across city services — complaints, trade licenses, property tax, water — without waiting for compiled reports.
 
-**What AI adds:**
-- Real-time cross-city queries
-- Aggregated intelligence without waiting for city reports
-- Anomaly detection: which cities have unusual patterns
+**What MCP gives them:** Direct queries to live DIGIT data in plain English. The MCP server exposes the full application service surface:
 
-**Risk tolerance:** Read-only. No writes needed. Data accuracy is critical — state decisions affect budget allocation.
+| Service | What the administrator can ask |
+|---|---|
+| PGR | "Which complaints have been open more than 30 days in Ward 5?" |
+| Trade License | "How many licenses expire in the next 60 days?" |
+| Property Tax | "Which properties in Ward 7 are more than 90 days behind?" |
+| Water & Sewerage | "Which commercial connections have 6 months of arrears?" |
 
----
+**The cross-service capability is what's new.** Claude calls Trade License AND Water & Sewerage, joins on property identifier, returns the enforcement list. No developer writes a custom query. The commissioner asks it directly, from the live system, right now.
 
-### 4. Developers / Technical Teams
-**Who:** Engineers building services on DIGIT 3.0, writing integrations, testing APIs.
+**What RAG V5 gives them:** "How does the renewal process work?" → documentation answer from the knowledge base. "Which licenses expire this month?" → that is MCP, not RAG. The router between them is a single intent question: is this a question about how something works, or a request for live data?
 
-**What they need:**
-- Understand what APIs exist and how to call them
-- Navigate process definitions and workflow states
-- Test API behaviour without full environment setup
-- Currently: digit-specs (16 OpenAPI files), digit-client (Java), digit-cli, documentation
-
-**What AI adds:**
-- Natural language API exploration ("what fields are required for workflow creation?")
-- Code generation from specs
-- Test case generation
-
-**Risk tolerance:** High. Developer environments are sandboxed.
+**Writes:** Confirmation required before any state change. DIGIT's RBAC determines what they are allowed to change. The AI never holds elevated permissions.
 
 ---
 
-### 5. AI Agents
-**Who:** Claude, GPT-4, custom orchestrators, automated pipelines — acting on behalf of any of the above stakeholders.
+### State Official
 
-**What they need:**
-- A structured, well-documented tool surface (MCP server auto-generated from specs)
-- Platform-level knowledge of what operations are valid in the current state
-- Human-readable values in API responses — not internal codes (handled by certificate-standard specs, not a separate resolution layer)
-- Confirmation before executing write operations
+**What they need:** Cross-city intelligence — which cities are performing, which need intervention — without waiting for city-submitted annual reports.
 
-**Risk tolerance:** The AI agent itself has no risk tolerance — it's a tool. The risk tolerance is the stakeholder's. The platform enforces it via the confirmation layer.
+**What MCP gives them:** Cross-tenant queries against live data. A state official role in DIGIT's RBAC grants read access across tenants. The MCP forwards their JWT unchanged; DIGIT enforces what they can see.
+
+| What was previously | With AI-operable DIGIT |
+|---|---|
+| Annual report, manually compiled | Live query, seconds |
+| "Which cities improved?" → weeks of analyst work | One question |
+| "Which cities are at risk this quarter?" → nobody asks | Ask it every month |
+
+**No writes.** State officials read. Decisions are made by city officials.
 
 ---
 
-## What This Means for the AI Layer Design
+### Field Worker (HCM)
 
-| Stakeholder | Read ops | Write ops | Confirmation needed | AI value |
-|---|---|---|---|---|
-| Implementation teams | Low risk | Out of scope (production) | N/A | RAG V5 — documentation Q&A, sandbox exploration only |
-| City administrators | Low risk | High risk | Yes, mandatory | MCP queries + flagging — revenue intelligence, cross-domain synthesis, proactive alerts |
-| State officials | Low risk | None needed | N/A | MCP queries — cross-city intelligence, anomaly detection |
-| Developers | Low risk | Low risk (dev env) | Recommended | RAG V5 — spec exploration, code generation |
-| AI agents | Inherited from caller | Inherited from caller | Always | MCP server — executes on behalf of above stakeholders via confirmation gate |
+**What they need:** To register beneficiaries accurately in the field — often offline, often under time pressure.
 
-The AI layer must propagate the authenticated user's identity to DIGIT's APIs. The AI never holds a service account with elevated permissions. DIGIT's own RBAC is the enforcement mechanism — the AI layer must not bypass it.
+**What AI gives them:** On-device deduplication before submission. Before registering a beneficiary, fuzzy matching checks name + age + GPS proximity against existing records. "Possible duplicate: Amina Kone, age 3, 200m from here. Same child?" Worker confirms or proceeds. Duplicate caught at the point of creation, not discovered weeks later in a data quality audit.
+
+This runs in the Flutter app before any API call — not through MCP. The deduplication logic is a Flutter library. Every HCM campaign inherits it without rebuild.
+
+---
+
+## Summary
+
+| Stakeholder | Right tool | What AI-fying DIGIT adds |
+|---|---|---|
+| Developers | Repo access + Claude Code | Nothing — already solved |
+| Implementation teams (city setup) | RAG V5 for Q&A | Documentation answers only — setup itself is manual |
+| City administrators | MCP | Live cross-service queries; writes with confirmation |
+| State officials | MCP (read-only) | Cross-tenant live queries; no writes needed |
+| Field workers | On-device AI | Deduplication before submission |
+
+The AI layer always propagates the authenticated user's identity to DIGIT's APIs. The AI never holds elevated permissions. DIGIT's RBAC is the enforcement mechanism.

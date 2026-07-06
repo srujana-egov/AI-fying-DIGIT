@@ -327,46 +327,9 @@ No semantic layer. No tool registry. No custom intent classifier. No skills for 
 
 ---
 
-## AoP Projects: Which Are Relevant
+## Note on Shared Infrastructure
 
-The pattern across all relevant AoP initiatives: each team is solving a real domain problem, but is also independently building auth propagation, confirmation UX, audit trail, and entity resolution. These are platform concerns, not domain concerns. Building them once as shared infrastructure means each team only needs to solve the domain-specific part. Building them N times produces N different security postures and N maintenance burdens.
-
-### Directly relevant — should be coordinated under this architecture
-
-| # | Initiative | Role in architecture | Direction |
-|---|---|---|---|
-| 2 | LLM guidance chatbot | RAG V5 | Keep. Expand knowledge base to include interaction diagrams and process guides. Specs go into the MCP server, not RAG. |
-| 5 | MCP for DIGIT PGR | MCP Server | Generalize. Don't build PGR-specific — build the generator that produces MCP from any spec. PGR is the first test case, not the final scope. |
-| 8 | Service Config AI Agent | Limited — see note | Reframe. Configuration is one-time per city (not at-scale) and tenant isolation prevents cross-city template borrowing. The confirmation gate is still needed — but for operational write operations (transition approvals, batch renewals), not configuration. |
-| 13 | Console config chatbot | RAG V5 + MCP Server | Don't build RAG for config generation — RAG answers questions, it can't execute. Wire RAG V5 (questions) + confirmation gate (actions) with a thin intent router between them. |
-| 17 | HCM support chatbot | MCP Server + application interface | Keep. Should call the shared MCP server, not embed its own AI logic. |
-| 19 | HCM conversational data layer | MCP Server (conversational) + Intelligence microservice (fraud detection) | Split the two concerns. Fraud detection = domain-specific intelligence microservice. Conversational layer = shared MCP server, not HCM-specific. |
-| 20 | PGR integration with Temporal | Cross-module orchestration | n8n handles most workflows (already deployed at eGov). Scope should expand beyond PGR to all five cross-module flows. Temporal specifically for Start a Business saga compensation. |
-| 22 | HCM Console AI Copilot | Application layer | Keep as the application pattern. Ensure it calls the shared MCP server + confirmation gate rather than embedding its own AI logic. |
-
-### Indirectly relevant — useful acceleration, not core architecture
-
-| # | Initiative | How it helps |
-|---|---|---|
-| 4 | AI for development (Claude/Cursor) | Accelerates building everything above |
-| 6 | Tech design automation | Could auto-generate interaction diagrams from service code — high-value if it works |
-| 12 | Automating HCM implementation tasks | MCP Server setup intents for HCM — add to the shared server, don't build separately |
-
-### Not relevant to platform AI architecture
-
-| # | Initiative | Why |
-|---|---|---|
-| 1 | Test automation | Internal engineering tooling |
-| 3 | LCNC exploration | Separate concern |
-| 7 | Log anomaly detection | Infrastructure/DevOps, not platform AI |
-| 10 | User analytics | Product analytics, not platform AI |
-| 11 | Analytics stack modernisation | Data infrastructure, not platform AI |
-| 14 | UI module generation | Developer tooling |
-| 15 | Prompt library | Marginal |
-| 16 | UI test automation | Internal engineering |
-| 18 | Reports framework | Product feature |
-| 21 | Beckn Onix | Protocol integration, separate concern |
-| 23 | HCM debugger | Developer tooling |
+Several teams across eGov are independently building auth propagation, confirmation UX, and audit trail in their own AI integrations. These are platform concerns, not domain concerns. The right direction: each team builds only the domain-specific part (HCM fraud detection, PGR intelligence, console UX) and calls the shared MCP server + confirmation gate for everything else. Building auth and audit N times produces N different security postures and N maintenance burdens.
 
 ---
 

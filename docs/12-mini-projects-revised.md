@@ -74,7 +74,7 @@ These are Swagger 2.0 files. The gap is too large for incremental fixes. Full re
 □ Response fields are human-readable
 ```
 
-**AI team's contribution:** Can run an automated gap analysis script against each spec and produce a checklist report. Speeds up the platform team's work.
+An automated gap analysis script can run against each spec and produce a checklist report — speeds up the platform team's review.
 
 ---
 
@@ -710,12 +710,7 @@ The unique Temporal value is durable execution + saga compensation: if step 3 fa
 4. Annual Renewal Campaign (n8n, with resume logic for batch)
 5. Start a Business (n8n first → Temporal when compensation is needed)
 
-### Open questions for the architecture review
-
-1. **Infrastructure:** Is Temporal already deployed in DIGIT's infrastructure, or does it need to be set up? Self-hosted Temporal or Temporal Cloud?
-2. **Confirmation gate placement:** Should the human YES/NO confirmation sit inside the Temporal workflow (as a human-in-the-loop activity) or outside it (before the workflow is triggered)? This affects the UX significantly.
-3. **Priority workflow:** Of the 5 cross-module workflows, which should be built first? "Start a business" is the most visible. "Commissioner's brief" is read-only and safest to start with.
-4. **Row 20 in AoP (PGR integration with Temporal):** This is currently scoped to PGR only. Should it be expanded to be the general Temporal setup for all 5 workflows? This existing work is the foundation — scope expansion now saves rebuilding later.
+**Confirmation gate placement:** Human YES/NO confirmation sits before the workflow is triggered — the user confirms the whole workflow at entry, not each individual API call mid-execution.
 
 ---
 

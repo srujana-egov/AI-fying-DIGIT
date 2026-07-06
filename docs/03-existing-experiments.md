@@ -92,25 +92,6 @@ Audit log (proposed, not yet built)
 
 All 10 are implementation/setup intents — configuring a new city on DIGIT.
 
-### Test Coverage
-| Suite | Tests | Coverage |
-|---|---|---|
-| Intent inference | 148 | All intents, typos, edge cases, adversarial |
-| Session integration E2E | 21 | Full flows, YES/NO, non-linear journeys |
-| Allowed tools | 5 | State gate scenarios |
-| Tool selector | 7 | Prerequisite validation |
-| Orchestrator | 2 | Core flow |
-| Unit | 2 | Tool implementations |
-| Application context | 1 | Spring context loads |
-| **Total** | **186** | |
-
-All tests run offline. No API key required. Under 1 minute. Accuracy on intent inference: 95-98%.
-
-### Latency
-- Total: 500-800ms
-- OpenAI call: ~400ms (80% of total)
-- YES/NO path: near-instant (zero AI calls)
-
 ### What It Reveals
 1. **State-gated tool selection is the right pattern for government operations.** Offering AI only the tools that are valid given current deployment state prevents entire categories of error.
 2. **YES/NO confirmation with zero AI involvement is the right confirmation pattern.** Deterministic, instant, no inference risk on the execute path.

@@ -165,15 +165,6 @@ Consumers use PowerBI, DSS, existing tools
 
 **What the intern project (PGR) proves:** the pattern, not just the feature. PGR done = pattern available to all 18 other products.
 
-**Highest-value next domains after PGR:**
-
-| Priority | Domain | Why |
-|---|---|---|
-| 1 | Property Tax + Trade License (GIS revenue) | Direct government revenue, Ghanshyam-confirmed high interest, GIS data increasingly available |
-| 2 | HCM | Microplanning already uses GIS; flagging rules well-defined; large population data |
-| 3 | Water Schemes | 148M household connections — anomaly detection at this scale is significant |
-| 4 | Works Management | Contract fraud detection via satellite is high-visibility, high-impact |
-
 ---
 
 ## What Is NOT the AI Layer's Job
