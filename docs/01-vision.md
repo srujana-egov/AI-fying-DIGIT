@@ -26,9 +26,7 @@ That is the gap this proposal closes.
 
 ## What AI-Operable DIGIT Looks Like
 
-Certificate-standard OpenAPI specs → `openapi-generator-cli` → typed HTTP clients → MCP tool definitions. Auto-generated. Kong (digit3) validates the JWT and forwards the Bearer token. The MCP server adds a confirmation gate for all writes and an audit log for every action.
-
-The result: any LLM — Claude, GPT, a custom orchestrator — can call any DIGIT API, on behalf of any authenticated stakeholder, with human confirmation before writes and a complete audit trail after.
+Any LLM — Claude, GPT, a custom orchestrator — can call any DIGIT API, on behalf of any authenticated stakeholder, with human confirmation before writes and a complete audit trail after.
 
 DIGIT does not change. It becomes AI-operable.
 
