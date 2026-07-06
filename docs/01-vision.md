@@ -18,17 +18,9 @@ Three things repo access in an IDE cannot do:
 - **It cannot scale to non-technical users.** There are thousands of city officials, state officers, and field workers across hundreds of ULBs. You cannot give each of them a code repository and an IDE.
 - **It is not safe for production.** An LLM with full repo access and terminal can do anything — push code, delete files, run arbitrary commands. In a live government system you need a controlled surface: only the DIGIT APIs, with the user's own identity, with confirmation before every write, with a log of every action.
 
-MCP is that controlled surface. It is how an LLM operates DIGIT on behalf of any user — not just a developer, and not just in development.
+MCP is that controlled surface. Any LLM — Claude, GPT, a custom orchestrator — calls any DIGIT API on behalf of any authenticated stakeholder, with human confirmation before writes and a complete audit trail after.
 
 That is the gap this proposal closes.
-
----
-
-## What AI-Operable DIGIT Looks Like
-
-Any LLM — Claude, GPT, a custom orchestrator — can call any DIGIT API, on behalf of any authenticated stakeholder, with human confirmation before writes and a complete audit trail after.
-
-DIGIT does not change. It becomes AI-operable.
 
 ---
 
@@ -88,4 +80,6 @@ These 5 patterns apply across all 18 DIGIT domain products. See [AI Patterns Acr
 ## The Scale Argument
 
 The platform is the leverage point. AI built once at the platform layer is inherited by every domain, every city, every stakeholder — without each team rebuilding auth, confirmation, or audit from scratch.
+
+DIGIT does not change. It becomes AI-operable.
 
