@@ -2,22 +2,6 @@
 
 **A proposal for making DIGIT AI-operable — built from internal experiments, platform analysis, and a clear-eyed view of what the platform already provides.**
 
-Audience: Principal architect of DIGIT.
-
----
-
-## What This Is
-
-This repository documents the thinking, experiments, and architectural proposal behind making DIGIT AI-ready. It is not a critique of the platform. It is a study of what the platform already enables, what small additions would unlock significantly more AI capability, and what the AI layer itself needs to look like.
-
-Four experiments informed this:
-- **DIGIT MCP** — capability surface for DIGIT 2.9: what the platform can do, exposed as tools for AI agents
-- **digit-ai-orchestrator** — safety layer: what AI is allowed to do right now, based on deployment state
-- **Smart Grievance Mapping** (intern project, due July 30) — the intelligence + application layers for PGR, proving a replicable pattern
-- **EGOV RAG V5** — DIGIT Studio documentation chatbot with feedback loop (live)
-
-These four pieces, studied together with DIGIT 3.0's actual capabilities and the certificate service spec as the platform's own quality standard, produce a coherent and minimal AI architecture.
-
 ---
 
 ## Document Index
