@@ -20,25 +20,32 @@ This access — terminal, live credentials, whole instance — is not new. An SI
 
 MCP is that surface. Any LLM calls any DIGIT API on behalf of any authenticated user — with confirmation before writes and a complete audit trail.
 
----
 
-## What This Enables
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│  AI at the platform layer                                            │
+│                                                                      │
+│   ┌───────────────────────┐     ┌──────────────────────────────┐    │
+│   │        RAG V5         │     │          MCP Server           │    │
+│   │                       │     │                               │    │
+│   │  docs Q&A             │     │  live DIGIT operations        │    │
+│   │  "how does this       │     │  "do this"                    │    │
+│   │   process work?"      │     │                               │    │
+│   │                       │     │  auto-generated from specs    │    │
+│   │  no API calls         │     │  confirmation before writes   │    │
+│   │                       │     │  audit log · user token only  │    │
+│   └───────────────────────┘     └──────────────────────────────┘    │
+└──────────────────────────────────────────────────────────────────────┘
 
-**City administrator**
-
-> "Which commercial properties in Ward 5 have an active trade license but are more than 6 months behind on water charges?"
-
-Claude calls Trade License, calls Water & Sewerage, joins on property identifier, returns the enforcement list. Two separate DIGIT services. Currently: a developer writes a custom query. With AI-operable DIGIT: the commissioner asks it directly, from the live system, right now.
-
-**State official**
-
-> "Which cities have high trade license registrations relative to property tax collections? That gap is usually a sign of misclassification."
-
-Claude queries both metrics across all tenants simultaneously and flags the outliers. A state analyst compiles this once a year from city reports. With AI-operable DIGIT: live data, seconds, repeatable.
-
-**Field worker (HCM)**
-
-A field worker registers a beneficiary in the HCM Flutter app. Before submission: "Possible duplicate: Amina Kone, age 3, 200m from here. Same child?" Caught at the point of creation, not discovered weeks later in a data quality audit.
+┌──────────────────────────────────────────────────────────────────────┐
+│  AI at the application layer  (scheduled · no human trigger)         │
+│                                                                      │
+│  ┌──────────┐ ┌────────────┐ ┌──────────┐ ┌─────────┐ ┌──────────┐ │
+│  │ Flagging │ │    GIS     │ │Proactive │ │  Dedup  │ │ Process  │ │
+│  │          │ │ Cross-Ref  │ │ Alerting │ │         │ │  Intel   │ │
+│  └──────────┘ └────────────┘ └──────────┘ └─────────┘ └──────────┘ │
+└──────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
