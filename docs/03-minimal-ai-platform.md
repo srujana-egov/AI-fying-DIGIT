@@ -1,58 +1,59 @@
-# The Minimal AI Platform: Assuming Specs at the Certificate Service Standard
+# The Minimal AI Platform: How Spec Quality Shapes the Architecture
 
-**The central question the principal architect posed:**  
-If all DIGIT specs were as good as the certificate service spec — self-describing, human-readable codes, rich descriptions, interaction diagrams — what would the AI platform architecture be, and what artifacts would still be needed?
+**The central question:**  
+What does the AI platform architecture look like at the current DIGIT spec quality level, and what becomes possible as spec quality improves?
 
-This document answers that precisely.
+The answer is not binary. Spec quality is a dial. The architecture is the same at every quality level — MCP server, confirmation gate, audit log, RAG, orchestration engine. What changes is how much of it can be auto-generated vs hand-authored.
 
 ---
 
-## What the Current digit-specs Look Like vs the Target Standard
+## Spec Quality as a Dial
 
-Application-level specs span all DIGIT domain products — 20 in total across local governance, public health, public finance, water & sanitation, revenue, and justice. Not all have specs today.
+DIGIT's specs live at [github.com/egovernments/digit-specs](https://github.com/egovernments/digit-specs) — 23 platform services and 23 domain services. They are the current baseline.
 
-**7 found in `digitnxt/digit-specs` (2.9-era):**
-`tl-service.yml` · `bpa.yaml` · `property-services.yml` · `fire-noc.yaml` · `water-sewerage.yaml` · `pgr.yml` · `birth-registration.yaml`
+**At current spec quality**, the MCP server requires more hand-authoring:
 
-These are 2.9-era specs. Opaque codes, minimal descriptions, RequestInfo wrappers, no examples, no error semantics.
+| Component | At current spec quality |
+|---|---|
+| Tool names | Must be hand-authored per endpoint |
+| Tool descriptions | Must be written for AI readability — spec summaries insufficient |
+| Auth pattern | Auth token is in request body (`RequestInfo.authToken`), not Bearer header — needs adaptation per tool |
+| Cross-service logic | Must be hand-encoded in tool definitions |
+| Semantic layer | May be needed — some codes and statuses not human-readable |
 
-**~11 additional products need specs created at certificate standard:**
-Works Management · HCM · 10 Bed ICU · DIVOC · Social Benefits · iFix · Waste Management · Water Supply O&M · Water Schemes O&M · mCollect · DRISTI
+**As spec quality improves** (Bearer auth in headers, human-readable codes, rich descriptions, examples, idempotency keys, cross-service dependencies named), the same architecture requires less hand-authoring:
 
-**The target standard** (certificate service spec) has:
+| Component | At higher spec quality |
+|---|---|
+| Tool names | Auto-derived from `operationId` |
+| Tool descriptions | Auto-derived from `description` field — already AI-readable |
+| Auth pattern | Bearer token forwarded uniformly — no per-tool adaptation |
+| Cross-service logic | Encoded in interaction diagrams — AI reads the diagram |
+| Semantic layer | Not needed — codes already human-readable |
 
-| Property | 2.9 specs | Certificate service standard |
+The platform team's spec improvement work directly reduces the hand-authoring burden in the AI execution layer. The architecture does not change — the automation level does.
+
+**What the 2.9 MCP experiment had to build manually** (and what better specs eliminate):
+
+| What the 2.9 experiment built | Why it existed | Eliminated by better specs |
 |---|---|---|
-| Codes | Opaque integers / short codes | Human-readable: `LICENSE`, `TRADE`, `INSTITUTION` |
-| Descriptions | Minimal | Business logic, validation rules, holder vs applicant |
-| Examples | None | Realistic examples for every endpoint |
-| tenantId | In request body | From Bearer token — not a body field |
-| Idempotency | None | `Idempotency-Key` header on all writes |
-| Error semantics | Generic 500s | Meaningful: 409 for duplicate, 403 for inactive, 404 for not found |
-| Cross-service deps | Not mentioned | Named in descriptions ("Form Registry manages certificateDetail schema") |
-
-**What raising all application specs to this standard eliminates:**
-
-| What the 2.9 experiment built | Why it existed | Status at certificate standard |
-|---|---|---|
-| 61 hand-authored tool definitions | 2.9 specs too opaque for AI | **Eliminated** — auto-generate from specs |
-| Semantic layer (`@digit-mcp/data-provider`) | Codes uninterpretable | **Eliminated** — codes are already human-readable |
-| Tool descriptions rewritten for AI | Spec summaries insufficient | **Eliminated** — descriptions are already AI-readable |
-| Skills for single-service sequencing | Spec didn't explain dependencies | **Reduced** — interaction diagrams encode this |
+| 61 hand-authored tool definitions | Specs too opaque for AI | Auto-generate from specs |
+| Semantic layer (`@digit-mcp/data-provider`) | Codes uninterpretable | Codes already human-readable |
+| Tool descriptions rewritten for AI | Spec summaries insufficient | Descriptions already AI-readable |
+| Skills for single-service sequencing | Spec didn't explain dependencies | Interaction diagrams encode this |
 
 ---
 
 ## What Still Needs to Exist
 
-With all specs at the certificate service standard, the remaining artifacts split into two owners: platform team and AI execution layer.
+With the MCP server, the remaining artifacts split into two owners: platform team and AI execution layer.
 
 ---
 
 ### Platform Team Artifacts (5 things)
 
-**1. Specs at the certificate service standard** ← the principal architect's commitment  
-All 7 current services rewritten. Every new service starts at this standard.  
-Not an AI concern — this is platform quality.
+**1. Improve spec quality continuously**
+Better specs reduce hand-authoring in the MCP server. The current digit-specs are the starting point — improvements to auth patterns (Bearer header vs RequestInfo body), code readability, descriptions, and examples directly translate to more automation in the AI layer. Not an AI concern — this is platform quality.
 
 ---
 
@@ -108,22 +109,27 @@ No resolution middleware needed. The AI gets both the code (for API calls) and t
 
 ---
 
-**4. Gateway — Kong (digit3) is already configured**
+**4. Gateway — MCP above Kong**
 
-Kong is the existing API gateway in `digitnxt/digit3`. The core requirements are already met:
+MCP sits above Kong — it is the first point of contact for all AI requests. Kong remains the security boundary for all DIGIT API calls; MCP handles the conversational auth flow before requests reach Kong.
 
-| Capability | Status |
-|---|---|
-| JWT validation (RS256, Keycloak JWKS) | ✓ `dynamic-jwt` Lua plugin |
-| Bearer token forwarded to upstream services | ✓ Authorization header passed through unchanged |
-| X-Tenant-ID extracted from JWT and injected as header | ✓ `header-enrichment` plugin |
-| RBAC enforcement via accesscontrol service | ✓ `rbac` plugin |
-| Bootstrap whitelist (`/accounts`, `/keycloak` bypass JWT) | ✓ Configured in `setup.py` |
+```
+User / WhatsApp / Console
+        ↓
+    MCP Server
+  unauthenticated + whitelisted → serve directly
+  unauthenticated + needs auth  → OTP flow → get JWT from Keycloak
+  authenticated                 → forward to Kong with Bearer token
+        ↓
+      Kong  (digit3)
+  JWT validate + fwd  ✓  dynamic-jwt Lua plugin
+  X-Tenant-ID inject  ✓  header-enrichment plugin
+  RBAC enforcement    ✓  accesscontrol plugin
+```
 
 **What still needs doing:**
-- Register MCP server, RAG V5, and Temporal as protected services in Kong's `setup.py` (same pattern as workflow, boundary, idgen)
+- Register MCP server and RAG V5 with Kong's `setup.py` as protected services (same pattern as workflow, boundary, idgen)
 - Add per-tenant, per-agent rate limiting — AI agents call at machine speed; existing limits are designed for human-paced interaction
-- Confirm OTP endpoint whitelist behaviour (currently gets JWT + RBAC applied — may need to be whitelisted for unauthenticated OTP flows). This is not a minor detail: it is the prerequisite for any non-console channel to authenticate at all. A console user already has a browser session with Keycloak; a WhatsApp bot user has no equivalent login screen. The only way that user gets a real Keycloak-issued JWT is by proving identity through OTP against a whitelisted, unauthenticated endpoint — the same category of exception `/accounts` and `/keycloak` already are. Without this confirmed working, a WhatsApp-based consumer cannot reach MCP with a valid Bearer token, full stop.
 
 ---
 
@@ -229,9 +235,9 @@ The five that matter — not an exhaustive list, but five representative shapes 
 | Post-disaster triage | PGR + boundary + assignment (prioritise and dispatch) |
 | Commissioner's brief | PGR + PT + W&S + HCM (aggregate read, no writes) |
 
-**For execution:** Temporal runs all 5 — not just Start a Business. Only Start a Business needs Temporal's saga compensation (if Fire NOC fails after Trade License succeeded, roll back Trade License), and n8n (already deployed at eGov) is technically capable of the other 4. But the deciding factor is rollback: once Temporal is required for the one workflow that needs a compensation guarantee, running a second engine for the rest buys no capability and adds a second failure model to operate and debug. Temporal's durable execution also resumes correctly if a scheduled job crashes mid-batch — relevant to Annual Renewal Campaign's thousands of sequential writes, which n8n cannot resume mid-run. See [Mini Projects](06-mini-projects-revised.md) section 6 for the full comparison.
+**For execution:** An orchestration engine (e.g., n8n, Temporal) runs all 5. The engine choice is an open question that depends on what failure handling each workflow shape requires and what DIGIT's APIs support. See [Mini Projects](06-mini-projects-revised.md) section 6 for the full comparison.
 
-Temporal is a sequencer, not a second write path. Every step that writes to a DIGIT service — whether triggered by a live user or a cron schedule — calls the same MCP tool the interactive path uses, so it is schema-checked and audit-logged the same way. What changes for scheduled workflows is *when* human authorization happens: instead of a synchronous "confirm this one action" prompt, a person approves the workflow definition or campaign up front (e.g. "run annual renewal for all active holders in Amritsar"), and each step's write still lands in the same audit log. The confirmation gate is satisfied once, earlier, not skipped.
+The orchestration engine is a sequencer, not a second write path. Every step that writes to a DIGIT service — whether triggered by a live user or a cron schedule — calls the same MCP tool the interactive path uses, so it is schema-checked and audit-logged the same way. What changes for scheduled workflows is *when* human authorization happens: instead of a synchronous "confirm this one action" prompt, a person approves the workflow definition or campaign up front (e.g. "run annual renewal for all active holders in Amritsar"), and each step's write still lands in the same audit log. The confirmation gate is satisfied once, earlier, not skipped.
 
 ---
 
@@ -241,68 +247,57 @@ Two distinct interaction modes. The diagram shows both.
 
 ```
                         INTERACTIVE  (user-initiated)                 SCHEDULED  (cron-triggered)
-┌──────────────────────────────────────────────────────────────────┐ ┌─────────────────────────────┐
-│  Any consumer: city admin · state official · AI agent ·          │ │  Temporal                     │
-│  HCM console · PGR copilot · WhatsApp bot*                       │ │  cross-module orchestration  │
-└──────────────────────────┬───────────────────────────────────────┘ │  5 workflows · saga           │
-                           │                                          │  sequences steps; each write  │
-              ┌────────────▼────────────┐                            │  is one MCP tool call         │
-              │      Kong  (digit3)      │                            └──────────────┬────────────────┘
-              │  JWT validate + fwd  ✓  │                                           │
-              │  X-Tenant-ID inject  ✓  │                                           │ calls MCP tools
-              │  RBAC (accesscontrol)✓  │                                           │ (no separate path
-              │  Bootstrap whitelist ✓  │                                           │  to app services)
-              └──────┬──────────┬───────┘                                           │
-                     │          │                                                    │
-          ┌──────────┘          └───────────────────┐                              │
-          │                                         │                              │
-  ┌───────▼──────┐                          ┌───────▼────────┐◄─────────────────────┘
-  │   RAG V5     │                          │   MCP Server    │
-  │              │                          │                 │
-  │  Q&A from    │                          │  auto-gen from  │
-  │  corpus      │                          │  specs          │
-  │  docs +      │                          │  + confirm gate │
-  │  diagrams    │                          │  (interactive:  │
-  │              │                          │  per-action;    │
-  │  no DIGIT    │                          │  scheduled:     │
-  │  API calls   │                          │  pre-approved   │
-  │              │                          │  at definition) │
-  │              │                          │  + audit log,   │
-  │              │                          │  always written │
-  └──────────────┘                          │  direct ops     │
-                                             │  (app +         │
-                                             │  platform)      │
-                                             └───────┬─────────┘
-                                                     │ Bearer token forwarded
-                                                     │ Audit log written
-                                                     ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  Application Services  (certificate standard)                   │
-│                                                                 │
-│  certificate · pgr · trade-license · bpa · property ·          │
-│  fire-noc · water · works · hcm · social-benefits ·            │
-│  ifix · waste · mCollect · DRISTI · ...                         │
-│                                                                 │
-│  each: spec + interaction diagram                               │
-└──────────────────────────┬──────────────────────────────────────┘
-                           │ each app service calls platform services
-                           ▼
+┌──────────────────────────────────────────────────────────────────┐ ┌──────────────────────────────┐
+│  Any consumer: city admin · state official · AI agent ·          │ │  Orchestration engine          │
+│  HCM console · PGR copilot · WhatsApp                            │ │  (e.g., n8n, Temporal)         │
+└──────────────────────────┬───────────────────────────────────────┘ │  cross-module workflows        │
+                           │                                          │  each write: one MCP tool call │
+                           │              calls MCP tools ◄───────────┘
+              ┌────────────▼────────────────────────────────────────┐
+              │              MCP Server  (first contact)             │
+              │  unauth + whitelisted → serve directly               │
+              │  unauth + needs auth  → OTP flow → JWT from Keycloak │
+              │  authenticated        → forward to Kong              │
+              │  + confirm gate  (interactive: per-action;           │
+              │                   scheduled: pre-approved)           │
+              │  + audit log, always written                         │
+              └────────────────────┬────────────────────────────────┘
+                                   │ Bearer token forwarded
+              ┌────────────────────▼────────────────────────────────┐
+              │                  Kong  (digit3)                      │
+              │  JWT validate + fwd  ✓  dynamic-jwt Lua plugin       │
+              │  X-Tenant-ID inject  ✓  header-enrichment plugin     │
+              │  RBAC enforcement    ✓  accesscontrol plugin         │
+              │  Bootstrap whitelist ✓                               │
+              └──────┬──────────────────────────────────────────────┘
+                     │
+          ┌──────────┘
+          │
+  ┌───────▼──────┐          ┌────────────────────────────────────────────────────────┐
+  │   RAG V5     │          │   DIGIT Services                                        │
+  │              │          │  certificate · pgr · trade-license · bpa · property ·  │
+  │  Q&A from    │          │  fire-noc · water · works · hcm · social-benefits ·    │
+  │  corpus      │          │  ifix · waste · mCollect · DRISTI · ...                │
+  │  docs +      │          │  each: spec + interaction diagram                       │
+  │  diagrams    │          ├────────────────────────────────────────────────────────┤
+  │              │          │   Analytics Layer                                       │
+  │  no DIGIT    │          │  dashboard-analytics  (DSS · Elasticsearch pre-agg.)   │
+  │  API calls   │          │  report-service  (parameterized SQL · GROUP BY · PG)   │
+  │              │          │  egov-searcher  (YAML-driven search · PG + ES)         │
+  └──────────────┘          └────────────────────────┬───────────────────────────────┘
+                                                      │ each app service calls platform services
+                                                      ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │  Platform Services  (digit-specs/v3.0.0)                        │
 │                                                                 │
 │  workflow · individual · boundary · idgen · mdms ·              │
 │  notification · filestore · billing · registry · ...           │
 └──────────────────────────┬──────────────────────────────────┬───┘
-                           │ each app service calls platform  │
-                           │ services                          │ reads APPLICATION service
-                           ▼                                   │ records (scheduled)
-┌──────────────────────────────────────────────────────────┐  │ writes flags back via
-│  Platform Services  (digit-specs/v3.0.0)                 │  │ application service APIs
-│                                                          │  │ alert engine calls
-│  workflow · individual · boundary · idgen · mdms ·       │  │ notification (platform)
-│  notification · filestore · billing · registry · ...    │  │
-└──────────────────────────────────────────────────────────┘  │
-                                                              ▼
+                           │ reads APPLICATION service         │ writes flags back via
+                           │ records (scheduled)               │ application service APIs
+                           ▼                                   │ alert engine calls
+                                                               │ notification (platform)
+                                                               ▼
 ┌─────────────────────────────────────────────────────────────────
 │         INTELLIGENCE LAYER  (scheduled · domain-specific · shared pattern)
 │
@@ -333,8 +328,6 @@ Two distinct interaction modes. The diagram shows both.
 
 No semantic layer. No tool registry. No custom intent classifier. No skills for single-service operations.
 
-*\* WhatsApp bot cannot present a JWT to Kong the way a console user can — there is no browser session with Keycloak behind it. It needs the OTP whitelist item (Gateway section above) confirmed working: OTP against a whitelisted, unauthenticated endpoint is the only way this channel gets a real Keycloak-issued Bearer token. Until that is confirmed, this box is aspirational, not available.*
-
 **Note: "HCM console" in the consumer row is not the console's existing traffic.** A user clicking a button in the console today calls the application service directly — that path is unchanged and never touches Kong's AI routes. "HCM console" in the diagram means an AI copilot embedded inside the console (a chat panel) that, when used, calls the MCP server like any other consumer — same Kong, same auth, same application services, reached by natural language instead of a click. The confirmation gate's output (see Confirmation gate above) does not have to be a chat bubble — it can render as a native card inside the console UI.
 
 ---
@@ -349,17 +342,17 @@ Several teams across eGov are independently building auth propagation, confirmat
 
 **From the platform team (5 items):**
 
-1. Raise all ~18 domain product specs to the certificate service standard — human-readable codes, rich descriptions, examples, tenantId from Bearer, idempotency keys (7 rewrite from Swagger 2.0, ~11 create new)
+1. Improve spec quality across all ~18 domain product specs — human-readable codes, rich descriptions, examples, tenantId from Bearer, idempotency keys (7 rewrite from Swagger 2.0, ~11 create new)
 2. Add interaction diagrams (websequencediagrams/Mermaid format) for each major operation — prerequisites, data on arrows, failure alt block
 3. Add response enrichment — return code + label in the same response field
-4. Register MCP server, RAG V5, and Temporal with Kong (digit3) — add to `setup.py` as protected services; add AI-specific rate limiting
+4. Register MCP server and RAG V5 with Kong (digit3) — add to `setup.py` as protected services; add AI-specific rate limiting
 5. Define audit log schema at the platform level
 
 **From the AI execution layer (3 items — built once, shared by all):**
 
 1. MCP server — auto-generate from specs, add progressive disclosure groups, deploy
 2. Confirmation gate + audit log writer — Redis pending action store, confirm endpoint, PostgreSQL audit log
-3. Cross-module Temporal workflows — one engine for all 5, chosen because Start a Business needs saga compensation and running a second engine for the rest adds no value
+3. Cross-module workflow engine — orchestration engine choice (n8n or Temporal) and 5 workflow definitions; see [Mini Projects](06-mini-projects-revised.md) section 6
 
 **From the intelligence layer (one per domain, shared pattern):**
 

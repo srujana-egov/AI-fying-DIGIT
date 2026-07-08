@@ -1,6 +1,6 @@
-# Mini Projects — Revised Under the Certificate Service Standard
+# Mini Projects — The Build Plan
 
-This replaces the earlier mini projects doc. Based on the conversation with the principal architect and the certificate service spec as the target standard.
+This replaces the earlier mini projects doc. Based on the conversation with the principal architect on what each level of the architecture needs and how the build should sequence.
 
 ---
 
@@ -36,7 +36,7 @@ These are already OpenAPI 3.0.3 with clean design. The gap is not a rewrite — 
 
 ---
 
-### P1b — Application Services: Rewrite to Certificate Standard
+### P1b — Application Services: Rewrite to Target Quality
 
 **Owner:** Platform team + service owners  
 **Effort:** ~3-4 weeks per service  
@@ -44,11 +44,11 @@ These are already OpenAPI 3.0.3 with clean design. The gap is not a rewrite — 
 
 Two tracks within P1b:
 - **Rewrite** (7 exist as old Swagger 2.0 in digit-specs): tl-service, bpa, property-services, fire-noc, water-sewerage, pgr, birth-registration
-- **Create new** (~11 products with no OpenAPI spec or spec not yet at certificate standard): Works Management, HCM, 10 Bed ICU, DIVOC, Social Benefits, iFix, Waste Management, Water Supply O&M, Water Schemes O&M, mCollect, DRISTI
+- **Create new** (~11 products with no OpenAPI spec or spec not yet at higher-quality specs): Works Management, HCM, 10 Bed ICU, DIVOC, Social Benefits, iFix, Waste Management, Water Supply O&M, Water Schemes O&M, mCollect, DRISTI
 
-These are Swagger 2.0 files. The gap is too large for incremental fixes. Full rewrite using `Certificate-3.0.0.yaml` (from `digitnxt/license-certificate`) as the template.
+These are Swagger 2.0 files. The gap is too large for incremental fixes. Full rewrite to the target quality level.
 
-| Property | Current old specs | Certificate standard |
+| Property | Current old specs | Target quality |
 |---|---|---|
 | OpenAPI version | Swagger 2.0 / early OpenAPI 3.0 | OpenAPI 3.0.3 |
 | Request pattern | POST-only with `RequestInfo` wrapper in body | REST: GET reads, POST writes, no wrapper |
@@ -304,11 +304,11 @@ Step 7 (3-4 days): Test against real DIGIT instance
 **Total: ~2 weeks for 1 developer.**  
 Not a research project. A build project with clear inputs (specs) and clear outputs (running MCP server).
 
-### How thin is the MCP server with certificate-standard specs?
+### How thin is the MCP server with higher-quality specs?
 
-With specs at certificate standard, almost every decision in the MCP server is auto-derived:
+With specs at higher-quality specs, almost every decision in the MCP server is auto-derived:
 
-| Component | With Swagger 2.0 specs (2.9 approach) | With certificate-standard specs |
+| Component | With Swagger 2.0 specs (2.9 approach) | With higher-quality specs |
 |---|---|---|
 | Tool name | Hand-authored per tool | `operationId` from spec |
 | Tool description | Hand-authored per tool | `description` from spec — already AI-readable |
@@ -321,7 +321,7 @@ With specs at certificate standard, almost every decision in the MCP server is a
 
 **Total hand-authored code: ~300-400 lines.** Everything else is generated from specs.
 
-The 2.9 MCP experiment needed 61 hand-authored tools because the specs were not self-describing. With certificate-standard specs, those same tools generate automatically. The platform team's investment in spec quality eliminates the hand-authoring investment in the MCP server — permanently.
+The 2.9 MCP experiment needed 61 hand-authored tools because the specs were not self-describing. With higher-quality specs, those same tools generate automatically. The platform team's investment in spec quality eliminates the hand-authoring investment in the MCP server — permanently.
 
 ### What happens if there is a future agentic AI standard or MCP v2?
 
@@ -608,30 +608,21 @@ async def execute_and_audit(pending: dict, ctx, http_client):
 
 ---
 
-## 6. Temporal — Use Case and Why It Replaces n8n
+## 6. Cross-Module Workflow Engine — n8n or Temporal?
 
 ### How the 5 workflows call DIGIT
 
-Temporal activities call the **MCP server's tools** — not DIGIT APIs directly. This keeps every cross-module write on the same schema-checked, audit-logged path the interactive MCP path uses (see [03 — Minimal AI Platform](03-minimal-ai-platform.md)). Each activity carries the triggering user's Bearer token, or, for scheduled runs, the identity that approved the workflow definition up front.
+Regardless of engine, workflow activities call the **MCP server's tools** — not DIGIT APIs directly. This keeps every cross-module write on the same schema-checked, audit-logged path the interactive MCP path uses (see [03 — Minimal AI Platform](03-minimal-ai-platform.md)). Each activity carries the triggering user's Bearer token, or, for scheduled runs, the identity that approved the workflow definition up front.
 
 ```
 User/scheduler triggers workflow (confirmed at entry)
-  → Temporal activity: apply_for_certificate("trade-license", ...)
+  → engine activity: apply_for_certificate("trade-license", ...)
     → calls MCP tool `certificate_apply`
       → Kong validates JWT → Trade License service
       → audit log written
-  → Temporal activity: apply_for_certificate("fire-noc", ...)      (parallel)
-  → Temporal activity: apply_for_water_connection(...)              (parallel)
+  → engine activity: apply_for_certificate("fire-noc", ...)      (parallel)
+  → engine activity: apply_for_water_connection(...)              (parallel)
 ```
-
-### What Temporal is
-
-Open-source workflow orchestration engine. Handles:
-- Durable execution (if server crashes mid-workflow, it resumes exactly where it stopped)
-- Parallel execution (run Trade License + Fire NOC + Water Connection simultaneously, wait for all)
-- Automatic retry with backoff (DIGIT API returns 503 → Temporal retries, not your code)
-- Compensation (if step 3 fails, automatically run rollback for steps 1 and 2)
-- Long-running workflows (a permit approval process that takes days)
 
 ### Why these 5 workflows
 
@@ -647,82 +638,91 @@ They are not the only cross-module need DIGIT will ever have — they are five r
 
 Covering these five shapes is enough to prove the orchestration layer handles the categories of cross-module work DIGIT needs. A new cross-module requirement is very likely a variation on one of these five, not a sixth category.
 
-### The 5 cross-module workflows — all on Temporal
+### The engine comparison
 
-| Workflow | Services | Why Temporal |
-|---|---|---|
-| Start a business | TL + Fire NOC + Water (parallel) | Parallel execution + wait-for-all + partial failure compensation |
-| Annual renewal campaign | Certificate × all active holders | Long-running, thousands of parallel calls, resume on failure |
-| Revenue recovery | Property Tax + Water & Sewerage | Cross-module query + action sequence with state |
-| Post-disaster triage | PGR + Boundary + Assignment | Time-sensitive, parallel ward processing |
-| Commissioner's brief | PGR + PT + W&S + HCM | Parallel reads + aggregation |
+n8n is already deployed at eGov. Temporal is purpose-built for durable, compensating workflows. The question is whether n8n's existing deployment and visual editor outweigh Temporal's stronger failure guarantees.
 
-### What a Temporal workflow looks like for "Start a Business"
+| Workflow | n8n | Temporal | Decision factor |
+|---|---|---|---|
+| Commissioner's Brief | Yes — parallel reads + aggregate, n8n's sweet spot | Yes | Either works |
+| Revenue Recovery | Yes — sequential query + write, no compensation needed | Yes | Either works |
+| Post-disaster Triage | Yes — webhook trigger + parallel dispatch | Yes | Either works |
+| Annual Renewal Campaign | Mostly — loops through all holders; no crash-resume if n8n dies mid-batch | Yes — resumes exactly where it stopped | Depends on batch size and tolerance for restart |
+| Start a Business | Partial — parallel TL + Fire NOC + Water is doable; rollback if one fails is not built-in and requires custom error handling | Yes — saga compensation is native | Depends on whether a revoke API exists in DIGIT workflow service |
+
+**The open questions that determine the answer:**
+
+1. **Does DIGIT's workflow service support a revoke/cancel transition?** If Trade License succeeds but Fire NOC fails, can the Trade License application be rolled back via a `REVOKE` action through the existing workflow state machine? If yes, n8n can implement compensation using the revoke API — custom, but achievable. If no, Temporal's built-in saga compensation is the only clean option for Start a Business.
+
+2. **What is the Annual Renewal Campaign batch size?** For hundreds of records, n8n restart-from-zero is tolerable. For tens of thousands, crash-resume (Temporal's guarantee) matters.
+
+3. **Is operational simplicity a priority?** n8n is already deployed. Adding Temporal means a new operational dependency, a new failure model, and a new system to monitor. If n8n can cover all 5 with acceptable guarantees, that is one less system to run.
+
+### n8n with revoke API — what it looks like for Start a Business
+
+If DIGIT workflow service has a revoke transition:
+
+```
+n8n workflow: Start a Business
+  Step 1: Apply Trade License (MCP tool: certificate_apply, type=trade-license)
+  Step 2: Apply Fire NOC       (MCP tool: certificate_apply, type=fire-noc)       [parallel]
+  Step 3: Apply Water          (MCP tool: apply_for_water_connection)              [parallel]
+
+  On error in any step:
+    → error branch: revoke completed applications via MCP tools
+    → notify user of partial failure
+```
+
+n8n's error branches handle this — not elegant saga compensation, but functionally equivalent if the revoke API is reliable.
+
+### Temporal — what it looks like for Start a Business
 
 ```python
 @workflow.defn
 class StartBusinessWorkflow:
     @workflow.run
     async def run(self, params: StartBusinessParams):
-        
-        # Present to human for confirmation before any writes
-        await workflow.execute_activity(
-            confirm_with_human,
-            args=["Apply for Trade License, Fire NOC, and Water Connection in parallel?"],
-            start_to_close_timeout=timedelta(minutes=10)
-        )
-        
-        # Run all three in parallel — wait for all to complete
-        # Each activity below calls the matching MCP tool (e.g. certificate_apply),
-        # not the DIGIT API directly — same schema check, same audit log as the interactive path
         results = await asyncio.gather(
-            workflow.execute_activity(apply_for_certificate, 
+            workflow.execute_activity(apply_for_certificate,
                 args=["trade-license", params.tradeLicenseData]),
             workflow.execute_activity(apply_for_certificate,
-                args=["fire-noc", params.fireNocData]),  
+                args=["fire-noc", params.fireNocData]),
             workflow.execute_activity(apply_for_water_connection,
                 args=[params.waterData])
         )
-        
-        return {
-            "tradeLicense": results[0],
-            "fireNoc": results[1], 
-            "waterConnection": results[2],
-            "status": "all applications submitted"
-        }
+        return {"status": "all applications submitted"}
 ```
 
-If the Fire NOC activity fails halfway, Temporal automatically retries it. If it permanently fails, it runs the compensation (cancel Trade License + Water Connection that already succeeded).
+If Fire NOC fails permanently, Temporal automatically runs compensation — cancel Trade License and Water Connection that already succeeded. No custom error branch needed.
 
-### Why not n8n or OpenFn for these workflows?
+### Verification checklist before deciding
 
-**n8n: capable of 4 of 5, but not chosen.**
+```
+□ Does DIGIT workflow service have a REVOKE/CANCEL action for active applications?
+  → If YES: n8n with error-branch revoke is viable for all 5
+  → If NO: Temporal needed for Start a Business at minimum
 
-n8n is already deployed at eGov. It has an HTTP Request node, can call DIGIT APIs with Bearer tokens, has a visual workflow editor, and can run steps in parallel using Split In Batches / Merge nodes.
+□ What is the largest Annual Renewal Campaign batch (# of holders per tenant)?
+  → Under ~1,000: n8n restart-from-zero is acceptable
+  → Over ~1,000: Temporal crash-resume is the cleaner option
 
-| Workflow | n8n capable? | Why / Why not |
-|---|---|---|
-| Commissioner's Brief | Yes | Parallel reads + aggregate. This is n8n's sweet spot. |
-| Revenue Recovery | Yes | Query PT + W&S → flag → write. Sequential, no compensation needed. |
-| Post-disaster Triage | Yes | Webhook trigger → parallel ward assignment. n8n handles this. |
-| Annual Renewal Campaign | Mostly | Loop through certificate holders, call API per holder. Weakness: if n8n crashes mid-batch, no resume. For thousands of records this matters. |
-| Start a Business | No | Parallel TL + Fire NOC + Water is doable. Compensation (if Fire NOC fails after TL succeeded → cancel TL) is not built-in. Needs custom error-handling code, and even then is not a guarantee. |
+□ Is n8n already running in the target deployment environment?
+  → If YES: operational cost of adding Temporal is real (new system to run + monitor)
+  → If NO: both engines require new deployment work
 
-The deciding factor is rollback. Start a Business needs Temporal's compensation guarantee — n8n has no built-in equivalent. Once Temporal is the engine of record for that one workflow, running n8n for the other four buys nothing: it means two orchestration engines, two failure models, two places to debug when a cross-module workflow breaks, for capability Temporal already has. Annual Renewal Campaign reinforces this independently of rollback — looping through thousands of certificate holders in n8n has no resume if it crashes mid-batch; the same workflow in Temporal resumes exactly where it stopped. Standardizing on the engine with both guarantees — rollback and crash-resume — is simpler than deciding, workflow by workflow, which of two engines it needs.
+□ Who owns the orchestration engine operationally?
+  → Temporal requires a dedicated server; n8n is lighter
+```
 
-**OpenFn: not the right tool here.**  
-OpenFn is designed for ETL and data integration between systems. It is good at mapping and transforming data between APIs. It is not designed for long-running sagas with compensation, parallel execution with wait-for-all, or human-in-the-loop mid-workflow. Not recommended for any of the 5 workflows.
+### Build order (engine-agnostic)
 
-### Recommendation
+Regardless of which engine is chosen, build in this order — start with read-only workflows, add writes, add compensation last:
 
-**Temporal for all 5 cross-module workflows.** Not because all 5 need saga compensation — only Start a Business does — but because once Temporal is required for that one workflow, using a second engine (n8n) for the rest adds an operational surface without adding capability. One engine, one failure model, one place to look when something breaks.
-
-**Build order:**
-1. Commissioner's Brief (Temporal, read-only, safe to iterate)
-2. Revenue Recovery (Temporal, write-heavy but single-path)
-3. Post-disaster Triage (Temporal, webhook/schedule-triggered)
-4. Annual Renewal Campaign (Temporal, durable execution handles batch resume natively)
-5. Start a Business (Temporal, saga compensation)
+1. Commissioner's Brief (read-only, safe to iterate on either engine)
+2. Revenue Recovery (write-heavy but single-path, no compensation)
+3. Post-disaster Triage (webhook/schedule-triggered)
+4. Annual Renewal Campaign (batch — reveals the crash-resume requirement)
+5. Start a Business (saga — reveals the compensation requirement)
 
 **Confirmation gate placement:** Human YES/NO confirmation sits before the workflow is triggered — the user confirms the whole workflow at entry, not each individual API call mid-execution.
 
@@ -744,7 +744,7 @@ OpenFn is designed for ETL and data integration between systems. It is good at m
 
 `serviceCode`, `applicationStatus`, `accountId` — opaque to a human or AI reading this response.
 
-### What certificate service standard responses return
+### What higher-quality spec responses return
 
 ```json
 {
@@ -781,7 +781,7 @@ AI agent calls `individual_search` as a second tool call to look up the applican
 
 ### Verdict
 
-| Need | Certificate standard spec | Semantic layer needed? |
+| Need | At higher spec quality | Semantic layer needed? |
 |---|---|---|
 | Human-readable codes | Yes — `LICENSE`, `TRADE`, `INSTITUTION` | No |
 | Cross-entity joins (name from ID) | Partial — needs enrichment or multi-hop | No |
@@ -805,7 +805,7 @@ The remaining cross-entity needs are handled by either response enrichment (plat
 | P4 | Confirmation gate *(inside MCP server — not a separate service)* | AI Execution | Platform team, 1 developer | 3-4 days | P3 |
 | P5 | Audit log writer *(inside MCP server — not a separate service)* | AI Execution | Platform team, 1 developer | 2-3 days | P3 |
 | P6 | RAG V5 — diagram ingestion (specs go into MCP, not RAG) | AI Execution | Platform team, 1 developer | 3-5 days | P2a, P2b |
-| P7 | 5 cross-module workflows (Temporal for all 5 — saga compensation for Start a Business, durable execution for the rest) | AI Execution | Platform team, 1-2 developers | 4-6 weeks | P1b, P3 |
+| P7 | 5 cross-module workflows (orchestration engine — n8n or Temporal, depending on DIGIT revoke API support and batch scale; see section 6) | AI Execution | Platform team, 1-2 developers | 4-6 weeks | P1b, P3 |
 
 **What's eliminated vs the original mini project list:**
 - Semantic layer → eliminated
@@ -815,5 +815,5 @@ The remaining cross-entity needs are handled by either response enrichment (plat
 
 **What's new vs the original list:**
 - Interaction diagrams (P2) → added, owned by platform team
-- Temporal (P7) → replaces vague "cross-module orchestration" with a specific engine
+- Orchestration engine (P7) → 5 workflow shapes defined; engine choice (n8n vs Temporal) depends on DIGIT revoke API and batch scale — open question with verification checklist
 - RAG adaptation (P6) → diagram ingestion only; specs go into MCP server via openapi-generator, not RAG

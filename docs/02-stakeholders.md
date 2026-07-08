@@ -32,8 +32,18 @@ Implementation teams arrive trained. What helps them is RAG V5 for documentation
 
 ## How MCP Works in Practice
 
-**One MCP server, not one per city.**
-The MCP server is shared across the whole DIGIT platform. What makes it act on "Amritsar specifically" is the login token — the Bearer token from Kong already encodes which city the user belongs to (`pb.amritsar`). A city administrator logged into Amritsar's DIGIT instance only sees and acts on Amritsar's data. A state official with cross-tenant access sees all cities. Same tools everywhere. Scoped by who's asking.
+**MCP sits above Kong — it is the first thing a request hits.**
+
+A request from any channel (console, WhatsApp, SMS bot) arrives at MCP before reaching Kong. MCP decides what happens next:
+
+- **Unauthenticated, whitelisted operation** → MCP serves directly. No JWT required.
+- **Unauthenticated, needs auth** → MCP responds conversationally: "You need to log in. Please send your OTP." MCP handles the OTP flow, obtains a JWT from Keycloak, stores it in session. This solves the non-browser channel problem — a WhatsApp user has no browser session with Keycloak, but MCP can drive the OTP flow directly.
+- **Authenticated** → MCP forwards to Kong with the Bearer token.
+
+Kong still validates every JWT on every DIGIT API call. MCP above Kong does not bypass Kong's security — it handles the conversational auth flow before the call reaches Kong.
+
+**One MCP server, scoped by who's asking.**
+The server is shared across the whole DIGIT platform. What makes it act on "Amritsar specifically" is the login token — the Bearer token encodes which city the user belongs to (`pb.amritsar`). A city administrator logged into Amritsar's DIGIT instance only sees and acts on Amritsar's data. A state official with cross-tenant access sees all cities. Same tools everywhere. Scoped by who's asking.
 
 **Reads happen immediately. Writes require confirmation.**
 The MCP server is not an autonomous agent. Read operations — look up a certificate, check complaint status, query overdue payments — execute directly. Anything that changes data (apply, approve, assign, renew) is proposed first: the user sees exactly what will happen and must say YES before it fires. A chatbot with real hands, where a human confirms before any button is pressed.

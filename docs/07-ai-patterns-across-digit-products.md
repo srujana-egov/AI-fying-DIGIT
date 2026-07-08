@@ -144,7 +144,7 @@ DIGIT workflow service records every state transition with timestamps. Enough hi
 
 ## What This Means for the Platform AI Layer
 
-**Every product benefits from the same platform layer.** The MCP server auto-generated from DIGIT specs covers all products. The confirmation gate applies to every write operation across every product. The Temporal cross-module workflows connect products that share data (Property Tax + Water + Trade License at the same address).
+**Every product benefits from the same platform layer.** The MCP server auto-generated from DIGIT specs covers all products. The confirmation gate applies to every write operation across every product. The cross-module workflows connect products that share data (Property Tax + Water + Trade License at the same address).
 
 **The intelligence layer is one pattern, replicated per domain:**
 

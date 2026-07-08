@@ -1,6 +1,6 @@
 # Two-Level Spec Architecture: Platform Services vs Application Services
 
-The certificate service spec provided as the quality standard is **not** a platform service. It is an **application** built on top of DIGIT's platform services. This distinction matters for every downstream decision: what gets rewritten, what gets improved, and what kind of interaction diagrams each level needs.
+DIGIT specs operate at two distinct levels: platform services (the foundation) and application services (built on top). This distinction matters for every downstream decision: what gets rewritten, what gets improved, and what kind of interaction diagrams each level needs.
 
 ---
 
@@ -13,7 +13,7 @@ Level 2 — Application Services
   Examples: Certificate, PGR, Trade License, BPA, Property Tax,
             Water & Sewerage, Fire NOC, Birth Registration
 
-  Quality standard: Certificate-3.0.0.yaml
+  Target: OpenAPI 3.0.3, Bearer auth, human-readable codes, rich descriptions
   Current state of old services: Swagger 2.0, RequestInfo wrappers,
                                   opaque codes — need full rewrite
 
@@ -32,11 +32,11 @@ Level 1 — Platform Services
 
 ---
 
-## What the Certificate Service Standard Applies To
+## What Higher-Quality Specs Enable at Each Level
 
-The certificate service spec (`Certificate-3.0.0.yaml`) is the right template for **Level 2 application services**. It shows how a well-designed DIGIT application looks: it calls platform services (workflow, individual, boundary, form-registry), uses human-readable codes, provides rich descriptions, and follows clean REST conventions.
+A well-designed DIGIT application service spec calls platform services (workflow, individual, boundary), uses human-readable codes, provides rich descriptions, and follows clean REST conventions. That is the target quality for Level 2.
 
-It is NOT the template for Level 1 platform services. Platform services have a different purpose: they are the primitives that application services compose. Their spec quality standard is about correctness, completeness, and internal behavior documentation — not about cross-service orchestration.
+Level 1 platform services have a different purpose — they are the primitives that application services compose. Their quality standard is about correctness, completeness, and internal behavior documentation — not about cross-service orchestration.
 
 ---
 
@@ -56,7 +56,7 @@ These are already at a good baseline. The gaps:
 
 Platform services do **not** need:
 - Removal of their existing design (it's already clean)
-- Rewrite to certificate spec format (different level, different concerns)
+- Rewrite to application spec format (different level, different concerns)
 - Cross-service orchestration diagrams (that's Level 2's concern)
 
 ### Level 2 — Application Services (rewrite, don't improve)
@@ -66,10 +66,10 @@ eGov has ~18 domain products in total. Their specs are in two states:
 **7 exist as 2.9-era Swagger 2.0 files** (in digit-specs, gap too large for incremental fix — full rewrite needed):
 `pgr.yml` · `tl-service.yml` · `bpa.yaml` · `water-sewerage.yaml` · `property-services.yml` · `fire-noc.yaml` · `birth-registration.yaml`
 
-**~11 products need specs created at certificate standard** (may have internal specs in other formats, or no OpenAPI spec yet):
+**~11 products need specs created at the target quality level** (may have internal specs in other formats, or no OpenAPI spec yet):
 Works Management · HCM · 10 Bed ICU · DIVOC · Social Benefits · iFix · Waste Management · Water Supply O&M · Water Schemes O&M · mCollect · DRISTI
 
-In both cases the target is the same: OpenAPI 3.0.3 at certificate service standard.
+In both cases the target is the same: OpenAPI 3.0.3 with Bearer auth, human-readable codes, rich descriptions, and idempotency keys.
 
 What the rewrite delivers:
 - OpenAPI 3.0.3 (not Swagger 2.0)
@@ -200,7 +200,7 @@ Platform tools (from digit-specs/v3.0.0):
   mdms_search                   — "what certificate types are active?"
   filestore_upload              — "store this document"
 
-Application tools (from Certificate-3.0.0.yaml, rewritten pgr.yaml, etc.):
+Application tools (from rewritten application specs — pgr.yaml, tl-service.yaml, etc.):
   certificate_apply             — "apply for a trade license"
   certificate_transition        — "approve / reject this application"
   certificate_renew             — "renew before expiry"
@@ -236,11 +236,11 @@ state (unlock for state officials):
 | Decision | Level 1 (Platform) | Level 2 (Application) |
 |---|---|---|
 | Current state | Good — OpenAPI 3.0.3, clean design | Poor — Swagger 2.0, opaque, no examples |
-| Action needed | Improve (examples, idempotency, diagrams) | Rewrite to certificate standard |
-| Quality template | Platform spec conventions | Certificate-3.0.0.yaml |
+| Action needed | Improve (examples, idempotency, diagrams) | Rewrite to target quality level |
+| Quality template | Platform spec conventions | OpenAPI 3.0.3 + Bearer auth + human-readable codes |
 | Interaction diagrams | Internal behavior diagrams | Cross-service orchestration diagrams |
 | Count (diagrams) | ~35-48 (~2-3 per service × 16) | ~28 (~4 per service × 7) |
 | MCP tools generated | Platform tools (workflow, individual, etc.) | Application tools (certificate, pgr, etc.) |
 | Owner | Platform team | Platform team + service owners |
 
-**The certificate service is the quality standard for Level 2. The v3.0.0 platform specs define the standard for Level 1. These are different things.**
+**Level 2 targets OpenAPI 3.0.3 with Bearer auth, human-readable codes, and rich descriptions. Level 1 (v3.0.0 platform specs) already has a good baseline — it needs improvement, not rewrite. These are different quality targets for different purposes.**
